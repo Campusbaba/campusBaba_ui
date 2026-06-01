@@ -39,8 +39,8 @@ export default function RoutinesPage() {
     function openEdit(r: Routine) {
         setEditing(r);
         setForm({
-            classRoomId: typeof r.classRoomId === "object" ? (r.classRoomId as { _id: string })._id : String(r.classRoomId),
-            teacherId: typeof r.teacherId === "object" ? (r.teacherId as { _id: string })._id : String(r.teacherId),
+            classRoomId: r.classRoomId && typeof r.classRoomId === "object" ? (r.classRoomId as { _id: string })._id : String(r.classRoomId ?? ""),
+            teacherId: r.teacherId && typeof r.teacherId === "object" ? (r.teacherId as { _id: string })._id : String(r.teacherId ?? ""),
             subject: r.subject,
             dayOfWeek: r.dayOfWeek,
             startTime: r.startTime,
@@ -82,9 +82,9 @@ export default function RoutinesPage() {
         },
         {
             id: "teacher", header: "Teacher",
-            accessorFn: r => typeof r.teacherId === "object"
+            accessorFn: r => r.teacherId && typeof r.teacherId === "object"
                 ? `${(r.teacherId as { firstName: string; lastName: string }).firstName} ${(r.teacherId as { firstName: string; lastName: string }).lastName}`
-                : String(r.teacherId)
+                : r.teacherId ? String(r.teacherId) : "Unassigned"
         },
         { id: "subject", accessorKey: "subject", header: "Subject" },
         {
