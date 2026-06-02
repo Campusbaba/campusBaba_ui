@@ -116,7 +116,7 @@ export default function IncomeReportPage() {
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                             <YAxis tick={{ fontSize: 11 }} />
-                            <Tooltip formatter={(v: number | undefined) => `৳${(v ?? 0).toLocaleString()}`} />
+                            <Tooltip formatter={(v: any) => `৳${(v ?? 0).toLocaleString()}`} />
                             <Area
                                 type="monotone"
                                 dataKey="amount"
@@ -145,7 +145,7 @@ export default function IncomeReportPage() {
                                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                                 ))}
                             </Pie>
-                            <Tooltip formatter={(v: number | undefined) => `৳${(v ?? 0).toLocaleString()}`} />
+                            <Tooltip formatter={(v: any) => `৳${(v ?? 0).toLocaleString()}`} />
                             <Legend />
                         </PieChart>
                     </ResponsiveContainer>

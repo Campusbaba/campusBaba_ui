@@ -102,7 +102,7 @@ export default function ProfitExpensePage() {
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                             <YAxis tick={{ fontSize: 11 }} />
-                            <Tooltip formatter={(v: number | undefined) => `৳${(v ?? 0).toLocaleString()}`} />
+                            <Tooltip formatter={(v: any) => `৳${(v ?? 0).toLocaleString()}`} />
                             <Legend />
                             <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} name="Income" />
                             <Bar dataKey="expense" fill="#ef4444" radius={[4, 4, 0, 0]} name="Expense" />
@@ -116,7 +116,7 @@ export default function ProfitExpensePage() {
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                             <YAxis tick={{ fontSize: 11 }} />
-                            <Tooltip formatter={(v: number | undefined) => `৳${(v ?? 0).toLocaleString()}`} />
+                            <Tooltip formatter={(v: any) => `৳${(v ?? 0).toLocaleString()}`} />
                             <Line
                                 type="monotone"
                                 dataKey="profit"

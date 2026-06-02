@@ -165,7 +165,7 @@ export default function ProjectionPage() {
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                         <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                         <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip formatter={(v: number | undefined) => `৳${(v ?? 0).toLocaleString()}`} />
+                        <Tooltip formatter={(v: any) => `৳${(v ?? 0).toLocaleString()}`} />
                         <Legend />
                         <ReferenceLine
                             x={MONTHS[currentMonth]}
