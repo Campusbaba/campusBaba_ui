@@ -1,5 +1,5 @@
 "use client";
-import { Bell, LogOut, ChevronDown, Loader2 } from "lucide-react";
+import { Bell, LogOut, ChevronDown, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -126,16 +126,21 @@ export function Header({ title, onMenuClick }: HeaderProps) {
                     <PopoverTrigger asChild>
                         <button className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
                             {!isLoading && (
-                                <div className="hidden sm:flex flex-col text-left">
-                                    <span className="text-sm font-medium text-[--foreground] leading-tight">
-                                        {userName}
-                                    </span>
-                                    {userRole && (
-                                        <span className="text-xs text-[--muted-foreground] leading-tight">
-                                            {userRole}
+                                <>
+                                    <div className="sm:hidden flex items-center justify-center h-8 w-8 rounded-full bg-[--border]">
+                                        <User size={16} className="text-[--muted-foreground]" />
+                                    </div>
+                                    <div className="hidden sm:flex flex-col text-left">
+                                        <span className="text-sm font-medium text-[--foreground] leading-tight">
+                                            {userName}
                                         </span>
-                                    )}
-                                </div>
+                                        {userRole && (
+                                            <span className="text-xs text-[--muted-foreground] leading-tight">
+                                                {userRole}
+                                            </span>
+                                        )}
+                                    </div>
+                                </>
                             )}
                         </button>
                     </PopoverTrigger>
