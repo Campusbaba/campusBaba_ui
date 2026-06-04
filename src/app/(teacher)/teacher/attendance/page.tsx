@@ -29,7 +29,7 @@ const statusOptions = [
 
 export default function TeacherAttendancePage() {
     const { referenceId, user } = useAuth();
-    const { attendances, loading: histLoading, fetchAttendances, createAttendance } = useAttendance({}, false);
+    const { attendances, loading: histLoading, fetchAttendances, createAttendance, fetchTodayAttendance: fetchTodayAtt } = useAttendance({}, false);
     const { students, fetchStudents, loading: studLoading } = useStudents({}, false);
     const { classRooms: assignedClassRooms } = useClassRooms({}, true, referenceId ?? undefined);
 
@@ -41,6 +41,7 @@ export default function TeacherAttendancePage() {
     const [markRemarks, setMarkRemarks] = useState("");
     const [historyDate, setHistoryDate] = useState("");
     const [historyClassRoomId, setHistoryClassRoomId] = useState<string>("");
+    const [todayAttMap, setTodayAttMap] = useState<Record<string, string>>({});
     const [busy, setBusy] = useState(false);
 
     // Auto-select first classroom once available
@@ -58,6 +59,13 @@ export default function TeacherAttendancePage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedClassRoomId]);
 
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    useEffect(() => {
+        if (!selectedClassRoomId) return;
+        fetchTodayAtt(selectedClassRoomId).then(setTodayAttMap).catch(() => {});
+    }, [selectedClassRoomId, fetchTodayAtt]);
+
     // Fetch history filtered to teacher's classroom + optional date
     useEffect(() => {
         if (!historyClassRoomId) return;
@@ -72,6 +80,27 @@ export default function TeacherAttendancePage() {
         setAttendanceDate(new Date().toISOString().slice(0, 10));
         setMarkStatus("present");
         setMarkRemarks("");
+    }
+
+    async function quickMark(s: Student, status: AttendanceMark) {
+        setBusy(true);
+        try {
+            await createAttendance({
+                studentId: s._id,
+                classRoomId: typeof s.classRoomId === "object"
+                    ? (s.classRoomId as { _id: string })._id
+                    : (s.classRoomId as string),
+                date: todayStr,
+                status,
+                ...(user ? { markedBy: user.role } : {}),
+            });
+            setTodayAttMap(prev => ({ ...prev, [s._id]: status }));
+            toast.success(`${s.firstName} ${s.lastName} marked ${status}`);
+        } catch {
+            toast.error(`Failed to mark ${s.firstName} ${s.lastName}`);
+        } finally {
+            setBusy(false);
+        }
     }
 
     async function handleMarkSubmit() {
@@ -90,6 +119,9 @@ export default function TeacherAttendancePage() {
                     markedBy: user.role,
                 } : {}),
             });
+            if (attendanceDate === todayStr) {
+                setTodayAttMap(prev => ({ ...prev, [markingStudent._id]: markStatus }));
+            }
             toast.success(`Attendance saved for ${markingStudent.firstName} ${markingStudent.lastName}`);
             setMarkingStudent(null);
         } catch {
@@ -107,17 +139,36 @@ export default function TeacherAttendancePage() {
             cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge>,
         },
         {
+            id: "today", header: "Today",
+            cell: ({ row: { original: s } }) => {
+                const st = todayAttMap[s._id];
+                if (!st) return <span className="text-xs text-[--muted-foreground]">—</span>;
+                return <Badge variant={st === "present" ? "default" : "destructive"}>{st}</Badge>;
+            }
+        },
+        {
             id: "actions", header: "",
-            cell: ({ row: { original: s } }) => (
-                <Button size="sm" variant="outline" onClick={() => openMarkModal(s)}>
-                    <ClipboardList size={13} className="mr-1" /> Mark
-                </Button>
-            ),
+            cell: ({ row: { original: s } }) => {
+                const current = todayAttMap[s._id];
+                return (
+                    <div className="flex gap-1">
+                        <Button size="sm" variant={current === "present" ? "default" : "outline"} className={current === "present" ? "" : "text-green-600 border-green-600 hover:bg-green-50"} onClick={() => quickMark(s, "present")} title="Mark present for today">
+                            ✓
+                        </Button>
+                        <Button size="sm" variant={current === "absent" ? "destructive" : "outline"} className={current === "absent" ? "" : "text-red-600 border-red-600 hover:bg-red-50"} onClick={() => quickMark(s, "absent")} title="Mark absent for today">
+                            ✗
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => openMarkModal(s)}>
+                            <ClipboardList size={13} className="mr-1" /> Mark
+                        </Button>
+                    </div>
+                );
+            },
         },
     ];
 
     const historyColumns: ColumnDef<Attendance, unknown>[] = [
-        { id: "student", header: "Student", accessorFn: r => { const s = r.studentId; return typeof s === "object" ? `${(s as { firstName: string; lastName: string }).firstName} ${(s as { firstName: string; lastName: string }).lastName}` : String(s); } },
+        { id: "student", header: "Student", accessorFn: r => { const s = r.studentId; return s && typeof s === "object" ? `${(s as { firstName: string; lastName: string }).firstName} ${(s as { firstName: string; lastName: string }).lastName}` : String(s ?? ""); } },
         { id: "date", header: "Date", accessorFn: r => formatDate(r.date) },
         { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "present" ? "default" : "destructive"}>{String(getValue())}</Badge> },
         { id: "remarks", accessorKey: "remarks", header: "Remarks" },

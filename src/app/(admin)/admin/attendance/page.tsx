@@ -30,7 +30,7 @@ type AttendanceMark = "present" | "absent" | "late" | "excused";
 
 export default function AttendancePage() {
     const { user } = useAuth();
-    const { attendances, loading: histLoading, fetchAttendances, createAttendance, updateAttendance, deleteAttendance } = useAttendance();
+    const { attendances, loading: histLoading, fetchAttendances, createAttendance, updateAttendance, deleteAttendance, fetchTodayAttendance: fetchTodayAtt } = useAttendance();
     const { classRooms, loading: crLoading } = useClassRooms();
     const { students, fetchStudents, loading: studLoading } = useStudents();
 
@@ -42,6 +42,7 @@ export default function AttendancePage() {
     const [markRemarks, setMarkRemarks] = useState("");
     const [historyDate, setHistoryDate] = useState("");
     const [historyClassRoomId, setHistoryClassRoomId] = useState<string>("all");
+    const [todayAttMap, setTodayAttMap] = useState<Record<string, string>>({});
     const [editingRecord, setEditingRecord] = useState<Attendance | null>(null);
     const [editStatus, setEditStatus] = useState<AttendanceMark>("present");
     const [editRemarks, setEditRemarks] = useState("");
@@ -56,6 +57,12 @@ export default function AttendancePage() {
         fetchStudents(params);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedClassRoomId]);
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    useEffect(() => {
+        fetchTodayAtt(selectedClassRoomId !== "all" ? selectedClassRoomId : undefined).then(setTodayAttMap).catch(() => {});
+    }, [selectedClassRoomId, fetchTodayAtt]);
 
     // Refetch history whenever filters change
     useEffect(() => {
@@ -130,6 +137,27 @@ export default function AttendancePage() {
         }
     }
 
+    async function quickMark(s: Student, status: AttendanceMark) {
+        setBusy(true);
+        try {
+            await createAttendance({
+                studentId: s._id,
+                classRoomId: typeof s.classRoomId === "object"
+                    ? (s.classRoomId as { _id: string })._id
+                    : (s.classRoomId as string),
+                date: todayStr,
+                status,
+                ...(user ? { markedBy: user.role } : {}),
+            });
+            setTodayAttMap(prev => ({ ...prev, [s._id]: status }));
+            toast.success(`${s.firstName} ${s.lastName} marked ${status}`);
+        } catch {
+            toast.error(`Failed to mark ${s.firstName} ${s.lastName}`);
+        } finally {
+            setBusy(false);
+        }
+    }
+
     async function handleMarkSubmit() {
         if (!markingStudent) return;
         setBusy(true);
@@ -146,6 +174,9 @@ export default function AttendancePage() {
                     markedBy: user.role,
                 } : {}),
             });
+            if (attendanceDate === todayStr) {
+                setTodayAttMap(prev => ({ ...prev, [markingStudent._id]: markStatus }));
+            }
             toast.success(`Attendance saved for ${markingStudent.firstName} ${markingStudent.lastName}`);
             setMarkingStudent(null);
         } catch {
@@ -169,12 +200,31 @@ export default function AttendancePage() {
             cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge>
         },
         {
+            id: "today", header: "Today",
+            cell: ({ row: { original: s } }) => {
+                const st = todayAttMap[s._id];
+                if (!st) return <span className="text-xs text-[--muted-foreground]">—</span>;
+                return <Badge variant={st === "present" ? "default" : "destructive"}>{st}</Badge>;
+            }
+        },
+        {
             id: "actions", header: "",
-            cell: ({ row: { original: s } }) => (
-                <Button size="sm" variant="outline" onClick={() => openMarkModal(s)}>
-                    <ClipboardList size={13} className="mr-1" /> Mark
-                </Button>
-            )
+            cell: ({ row: { original: s } }) => {
+                const current = todayAttMap[s._id];
+                return (
+                    <div className="flex gap-1">
+                        <Button size="sm" variant={current === "present" ? "default" : "outline"} className={current === "present" ? "" : "text-green-600 border-green-600 hover:bg-green-50"} onClick={() => quickMark(s, "present")} title="Mark present for today">
+                            ✓
+                        </Button>
+                        <Button size="sm" variant={current === "absent" ? "destructive" : "outline"} className={current === "absent" ? "" : "text-red-600 border-red-600 hover:bg-red-50"} onClick={() => quickMark(s, "absent")} title="Mark absent for today">
+                            ✗
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => openMarkModal(s)}>
+                            <ClipboardList size={13} className="mr-1" /> Mark
+                        </Button>
+                    </div>
+                );
+            }
         },
     ];
 
@@ -183,9 +233,9 @@ export default function AttendancePage() {
             id: "student", header: "Student",
             accessorFn: r => {
                 const s = r.studentId;
-                return typeof s === "object"
+                return s && typeof s === "object"
                     ? `${(s as { firstName: string; lastName: string }).firstName} ${(s as { firstName: string; lastName: string }).lastName}`
-                    : String(s);
+                    : String(s ?? "");
             }
         },
         {

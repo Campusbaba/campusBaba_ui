@@ -33,6 +33,22 @@ export function useAttendance(initialParams = {}, autoFetch = true) {
     if (autoFetch) fetchAttendances();
   }, [fetchAttendances, autoFetch]);
 
+  const fetchTodayAttendance = useCallback(
+    async (classRoomId?: string) => {
+      const today = new Date().toISOString().slice(0, 10);
+      const params: Record<string, unknown> = { startDate: today, endDate: today + "T23:59:59", limit: 500 };
+      if (classRoomId) params.classRoomId = classRoomId;
+      const res = await api.get("/attendance", { params });
+      const map: Record<string, string> = {};
+      for (const a of res.data.data as Attendance[]) {
+        const sid = typeof a.studentId === "object" ? (a.studentId as { _id: string })._id : a.studentId;
+        map[sid] = a.status;
+      }
+      return map;
+    },
+    [],
+  );
+
   const createAttendance = async (payload: Partial<Attendance>) => {
     const res = await api.post("/attendance", payload);
     await fetchAttendances();
@@ -59,5 +75,6 @@ export function useAttendance(initialParams = {}, autoFetch = true) {
     createAttendance,
     updateAttendance,
     deleteAttendance,
+    fetchTodayAttendance,
   };
 }
