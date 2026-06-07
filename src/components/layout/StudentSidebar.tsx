@@ -7,22 +7,22 @@ export function StudentSidebar() {
         <AppSidebar
             role="student"
             navItems={[
-                { label: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
-                { label: "Payments", href: "/student/payments", icon: CreditCard },
+                { labelKey: "common.pages.dashboard", href: "/student/dashboard", icon: LayoutDashboard },
+                { labelKey: "common.pages.payments", href: "/student/payments", icon: CreditCard },
                 {
-                    label: "Academics",
+                    labelKey: "sidebar.groups.academics",
                     icon: BookOpen,
                     items: [
-                        { label: "My Routines", href: "/student/routines", icon: Clock },
-                        { label: "Attendance", href: "/student/attendance", icon: CalendarCheck },
+                        { labelKey: "sidebar.items.myRoutines", href: "/student/routines", icon: Clock },
+                        { labelKey: "common.pages.attendance", href: "/student/attendance", icon: CalendarCheck },
                     ],
                 },
                 {
-                    label: "Exams",
+                    labelKey: "sidebar.groups.examManagement",
                     icon: FilePen,
                     items: [
-                        { label: "Exam Schedule", href: "/student/exams", icon: FilePen },
-                        { label: "Exam Marks", href: "/student/exams/marks", icon: ClipboardCheck },
+                        { labelKey: "sidebar.items.examSchedule", href: "/student/exams", icon: FilePen },
+                        { labelKey: "common.pages.exammarks", href: "/student/exams/marks", icon: ClipboardCheck },
                     ],
                 },
             ]}

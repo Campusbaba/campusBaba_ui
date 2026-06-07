@@ -7,23 +7,23 @@ export function ParentSidebar() {
         <AppSidebar
             role="parent"
             navItems={[
-                { label: "Dashboard", href: "/parent/dashboard", icon: LayoutDashboard },
-                { label: "My Children", href: "/parent/children", icon: Users },
-                { label: "Payments", href: "/parent/payments", icon: CreditCard },
+                { labelKey: "common.pages.dashboard", href: "/parent/dashboard", icon: LayoutDashboard },
+                { labelKey: "sidebar.items.myChildren", href: "/parent/children", icon: Users },
+                { labelKey: "common.pages.payments", href: "/parent/payments", icon: CreditCard },
                 {
-                    label: "Academics",
+                    labelKey: "sidebar.groups.academics",
                     icon: BookOpen,
                     items: [
-                        { label: "My Routines", href: "/parent/routines", icon: Clock },
-                        { label: "Attendance", href: "/parent/attendance", icon: CalendarCheck },
+                        { labelKey: "sidebar.items.myRoutines", href: "/parent/routines", icon: Clock },
+                        { labelKey: "common.pages.attendance", href: "/parent/attendance", icon: CalendarCheck },
                     ],
                 },
                 {
-                    label: "Exams",
+                    labelKey: "sidebar.groups.examManagement",
                     icon: FilePen,
                     items: [
-                        { label: "Exams", href: "/parent/exams", icon: FilePen },
-                        { label: "Exam Marks", href: "/parent/exams/marks", icon: ClipboardCheck },
+                        { labelKey: "common.pages.exams", href: "/parent/exams", icon: FilePen },
+                        { labelKey: "common.pages.exammarks", href: "/parent/exams/marks", icon: ClipboardCheck },
                     ],
                 },
             ]}

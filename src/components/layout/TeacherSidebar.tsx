@@ -7,24 +7,24 @@ export function TeacherSidebar() {
         <AppSidebar
             role="teacher"
             navItems={[
-                { label: "Dashboard", href: "/teacher/dashboard", icon: LayoutDashboard },
+                { labelKey: "common.pages.dashboard", href: "/teacher/dashboard", icon: LayoutDashboard },
                 {
-                    label: "Academics",
+                    labelKey: "sidebar.groups.academics",
                     icon: Users,
                     items: [
-                        { label: "My Routines", href: "/teacher/routines", icon: Clock },
-                        { label: "Attendance", href: "/teacher/attendance", icon: CalendarCheck },
+                        { labelKey: "sidebar.items.myRoutines", href: "/teacher/routines", icon: Clock },
+                        { labelKey: "common.pages.attendance", href: "/teacher/attendance", icon: CalendarCheck },
                     ],
                 },
                 {
-                    label: "Exams",
+                    labelKey: "sidebar.groups.examManagement",
                     icon: FilePen,
                     items: [
-                        { label: "Exams", href: "/teacher/exams", icon: FilePen },
-                        { label: "Exam Marks", href: "/teacher/exams/marks", icon: ClipboardCheck },
+                        { labelKey: "common.pages.exams", href: "/teacher/exams", icon: FilePen },
+                        { labelKey: "common.pages.exammarks", href: "/teacher/exams/marks", icon: ClipboardCheck },
                     ],
                 },
-                { label: "Notices", href: "/teacher/notices", icon: Bell },
+                { labelKey: "common.pages.notices", href: "/teacher/notices", icon: Bell },
             ]}
         />
     );

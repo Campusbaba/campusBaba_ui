@@ -11,65 +11,65 @@ export function AdminSidebar() {
         <AppSidebar
             role="admin"
             navItems={[
-                { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+                { labelKey: "common.pages.dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
                 {
-                    label: "Users",
+                    labelKey: "sidebar.groups.users",
                     icon: Users,
                     items: [
-                        { label: "Students", href: "/admin/students", icon: GraduationCap },
-                        { label: "Teachers", href: "/admin/teachers", icon: UserCheck },
-                        { label: "Employees", href: "/admin/employees", icon: Briefcase },
-                        { label: "Parents", href: "/admin/parents", icon: Users },
+                        { labelKey: "common.pages.students", href: "/admin/students", icon: GraduationCap },
+                        { labelKey: "common.pages.teachers", href: "/admin/teachers", icon: UserCheck },
+                        { labelKey: "common.pages.employees", href: "/admin/employees", icon: Briefcase },
+                        { labelKey: "common.pages.parents", href: "/admin/parents", icon: Users },
                     ],
                 },
                 {
-                    label: "Academics",
+                    labelKey: "sidebar.groups.academics",
                     icon: BookOpen,
                     items: [
-                        { label: "Departments", href: "/admin/departments", icon: Building2 },
-                        { label: "Courses", href: "/admin/courses", icon: BookOpen },
-                        { label: "Class Rooms", href: "/admin/classrooms", icon: DoorOpen },
-                        { label: "Attendance", href: "/admin/attendance", icon: CalendarCheck },
-                        { label: "Routines", href: "/admin/routines", icon: Clock },
+                        { labelKey: "common.pages.departments", href: "/admin/departments", icon: Building2 },
+                        { labelKey: "common.pages.courses", href: "/admin/courses", icon: BookOpen },
+                        { labelKey: "sidebar.items.classRooms", href: "/admin/classrooms", icon: DoorOpen },
+                        { labelKey: "common.pages.attendance", href: "/admin/attendance", icon: CalendarCheck },
+                        { labelKey: "common.pages.routines", href: "/admin/routines", icon: Clock },
                     ],
                 },
                 {
-                    label: "Exam Management",
+                    labelKey: "sidebar.groups.examManagement",
                     icon: FilePen,
                     items: [
-                        { label: "Exams", href: "/admin/exams", icon: FilePen },
-                        { label: "Exam Marks", href: "/admin/exams/marks", icon: ClipboardCheck },
+                        { labelKey: "common.pages.exams", href: "/admin/exams", icon: FilePen },
+                        { labelKey: "common.pages.exammarks", href: "/admin/exams/marks", icon: ClipboardCheck },
                     ],
                 },
                 {
-                    label: "Payment Management",
+                    labelKey: "sidebar.groups.paymentManagement",
                     icon: CreditCard,
                     items: [
-                        { label: "Payments", href: "/admin/payments", icon: CreditCard },
+                        { labelKey: "common.pages.payments", href: "/admin/payments", icon: CreditCard },
                     ],
                 },
                 {
-                    label: "Expense Management",
+                    labelKey: "sidebar.groups.expenseManagement",
                     icon: Wallet,
                     items: [
-                        { label: "Expenses", href: "/admin/expenses", icon: Wallet },
+                        { labelKey: "common.pages.expenses", href: "/admin/expenses", icon: Wallet },
                     ],
                 },
                 {
-                    label: "Notice Management",
+                    labelKey: "sidebar.groups.noticeManagement",
                     icon: Bell,
                     items: [
-                        { label: "Notices", href: "/admin/notices", icon: Bell },
+                        { labelKey: "common.pages.notices", href: "/admin/notices", icon: Bell },
                     ],
                 },
                 {
-                    label: "Reports",
+                    labelKey: "sidebar.groups.reports",
                     icon: BarChart3,
                     items: [
-                        { label: "Profit / Expense", href: "/admin/reports/profit-expense", icon: TrendingDown },
-                        { label: "Income", href: "/admin/reports/income", icon: DollarSign },
-                        { label: "Enrollment", href: "/admin/reports/enrollment", icon: Users },
-                        { label: "Projection", href: "/admin/reports/projection", icon: TrendingUp },
+                        { labelKey: "sidebar.items.profitExpense", href: "/admin/reports/profit-expense", icon: TrendingDown },
+                        { labelKey: "common.pages.income", href: "/admin/reports/income", icon: DollarSign },
+                        { labelKey: "common.pages.enrollment", href: "/admin/reports/enrollment", icon: Users },
+                        { labelKey: "common.pages.projection", href: "/admin/reports/projection", icon: TrendingUp },
                     ],
                 },
             ]}

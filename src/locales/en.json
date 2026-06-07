@@ -76,6 +76,31 @@
     "noNotices": "No active notices",
     "logout": "Logout"
   },
+  "sidebar": {
+    "brand": "Schooler",
+    "roles": {
+      "admin": "Administrator",
+      "teacher": "Teacher Portal",
+      "parent": "Parent Portal",
+      "student": "Student Portal"
+    },
+    "groups": {
+      "users": "Users",
+      "academics": "Academics",
+      "examManagement": "Exam Management",
+      "paymentManagement": "Payment Management",
+      "expenseManagement": "Expense Management",
+      "noticeManagement": "Notice Management",
+      "reports": "Reports"
+    },
+    "items": {
+      "myChildren": "My Children",
+      "myRoutines": "My Routines",
+      "classRooms": "Class Rooms",
+      "examSchedule": "Exam Schedule",
+      "profitExpense": "Profit / Expense"
+    }
+  },
   "attendance": {
     "title": "Attendance",
     "markAttendance": "Mark Attendance",

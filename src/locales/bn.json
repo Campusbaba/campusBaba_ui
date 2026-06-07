@@ -76,6 +76,31 @@
     "noNotices": "কোনো সক্রিয় নোটিশ নেই",
     "logout": "লগআউট"
   },
+  "sidebar": {
+    "brand": "Schooler",
+    "roles": {
+      "admin": "অ্যাডমিনিস্ট্রেটর",
+      "teacher": "শিক্ষক পোর্টাল",
+      "parent": "অভিভাবক পোর্টাল",
+      "student": "শিক্ষার্থী পোর্টাল"
+    },
+    "groups": {
+      "users": "ব্যবহারকারী",
+      "academics": "একাডেমিক",
+      "examManagement": "পরীক্ষা ব্যবস্থাপনা",
+      "paymentManagement": "পেমেন্ট ব্যবস্থাপনা",
+      "expenseManagement": "ব্যয় ব্যবস্থাপনা",
+      "noticeManagement": "নোটিশ ব্যবস্থাপনা",
+      "reports": "প্রতিবেদন"
+    },
+    "items": {
+      "myChildren": "আমার সন্তান",
+      "myRoutines": "আমার রুটিন",
+      "classRooms": "শ্রেণিকক্ষ",
+      "examSchedule": "পরীক্ষার সময়সূচি",
+      "profitExpense": "লাভ / ব্যয়"
+    }
+  },
   "attendance": {
     "title": "উপস্থিতি",
     "markAttendance": "উপস্থিতি চিহ্নিত করুন",

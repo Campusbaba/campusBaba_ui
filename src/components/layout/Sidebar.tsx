@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LucideIcon, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
     Sidebar, SidebarContent, SidebarGroup,
     SidebarGroupContent, SidebarHeader,
@@ -14,14 +15,14 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export interface NavItem {
-    label: string;
+    labelKey: string;
     href: string;
     icon: LucideIcon;
     badge?: string | number;
 }
 
 export interface NavGroup {
-    label: string;
+    labelKey: string;
     icon: LucideIcon;
     items: NavItem[];
 }
@@ -41,22 +42,17 @@ interface AppSidebarProps {
 export function AppSidebar({ role, navItems }: AppSidebarProps) {
     const pathname = usePathname();
     const { isMobile, setOpenMobile } = useSidebar();
+    const { t } = useTranslation();
     const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
         // Auto-open the group whose child is active
         const active = new Set<string>();
         navItems.forEach(item => {
             if (isNavGroup(item) && item.items.some(c => pathname.startsWith(c.href))) {
-                active.add(item.label);
+                active.add(item.labelKey);
             }
         });
         return active;
     });
-
-    const roleLabel: Record<string, string> = {
-        admin: "Administrator",
-        teacher: "Teacher Portal",
-        parent: "Parent Portal",
-    };
 
     const toggleGroup = (label: string) => {
         setOpenGroups(prev => {
@@ -80,8 +76,8 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                         S
                     </span>
                     <div className="flex-1 min-w-0">
-                        <span className="block text-sm font-bold text-[--sidebar-foreground] truncate">Schooler</span>
-                        <span className="block text-[10px] text-[--sidebar-foreground]/50 capitalize">{roleLabel[role]}</span>
+                        <span className="block text-sm font-bold text-[--sidebar-foreground] truncate">{t("sidebar.brand")}</span>
+                        <span className="block text-[10px] text-[--sidebar-foreground]/50 capitalize">{t(`sidebar.roles.${role}`)}</span>
                     </div>
                 </div>
                 {/* Collapsed — show logo icon centered */}
@@ -98,7 +94,8 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                         <SidebarMenu>
                             {navItems.map((item, index) => {
                                 if (isNavGroup(item)) {
-                                    const isOpen = openGroups.has(item.label);
+                                    const label = t(item.labelKey);
+                                    const isOpen = openGroups.has(item.labelKey);
                                     const hasActiveChild = item.items.some(child =>
                                         pathname === child.href ||
                                         (child.href !== `/${role}` && pathname.startsWith(child.href))
@@ -107,12 +104,12 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                                         <SidebarMenuItem key={index}>
                                             <Collapsible
                                                 open={isOpen}
-                                                onOpenChange={() => toggleGroup(item.label)}
+                                                onOpenChange={() => toggleGroup(item.labelKey)}
                                             >
                                                 <CollapsibleTrigger asChild>
                                                     <SidebarMenuButton
                                                         isActive={hasActiveChild}
-                                                        tooltip={item.label}
+                                                        tooltip={label}
                                                         className={cn(
                                                             "w-full",
                                                             hasActiveChild &&
@@ -120,7 +117,7 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                                                         )}
                                                     >
                                                         <item.icon size={16} className="shrink-0" />
-                                                        <span className="flex-1 text-left">{item.label}</span>
+                                                        <span className="flex-1 text-left">{label}</span>
                                                         <ChevronDown
                                                             size={14}
                                                             className={cn(
@@ -148,7 +145,7 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                                                                     >
                                                                         <Link href={child.href} onClick={handleLinkClick}>
                                                                             <child.icon size={14} />
-                                                                            <span>{child.label}</span>
+                                                                            <span>{t(child.labelKey)}</span>
                                                                             {child.badge !== undefined && (
                                                                                 <span className="ml-auto text-[10px] font-semibold bg-[--sidebar-primary] text-[--sidebar-primary-foreground] rounded-full px-1.5 py-0.5 min-w-4.5 text-center">
                                                                                     {child.badge}
@@ -165,6 +162,7 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                                         </SidebarMenuItem>
                                     );
                                 } else {
+                                    const label = t(item.labelKey);
                                     const active =
                                         pathname === item.href ||
                                         (item.href !== `/${role}` && pathname.startsWith(item.href));
@@ -173,7 +171,7 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                                             <SidebarMenuButton
                                                 asChild
                                                 isActive={active}
-                                                tooltip={item.label}
+                                                tooltip={label}
                                                 className={cn(
                                                     active &&
                                                     "bg-[--sidebar-primary] text-[--sidebar-primary-foreground] hover:bg-[--sidebar-primary]/90 hover:text-[--sidebar-primary-foreground]"
@@ -181,7 +179,7 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                                             >
                                                 <Link href={item.href} onClick={handleLinkClick}>
                                                     <item.icon size={16} className="shrink-0" />
-                                                    <span>{item.label}</span>
+                                                    <span>{label}</span>
                                                     {item.badge !== undefined && (
                                                         <span className="ml-auto text-[10px] font-semibold bg-[--sidebar-primary] text-[--sidebar-primary-foreground] rounded-full px-1.5 py-0.5 min-w-4.5 text-center">
                                                             {item.badge}
