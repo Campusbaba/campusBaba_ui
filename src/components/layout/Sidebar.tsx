@@ -9,6 +9,7 @@ import {
     SidebarGroupContent, SidebarHeader,
     SidebarMenu, SidebarMenuButton, SidebarMenuItem,
     SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem,
+    useSidebar,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -39,6 +40,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ role, navItems }: AppSidebarProps) {
     const pathname = usePathname();
+    const { isMobile, setOpenMobile } = useSidebar();
     const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
         // Auto-open the group whose child is active
         const active = new Set<string>();
@@ -63,6 +65,10 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
             else next.add(label);
             return next;
         });
+    };
+
+    const handleLinkClick = () => {
+        if (isMobile) setOpenMobile(false);
     };
 
     return (
@@ -140,7 +146,7 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                                                                             "bg-[--sidebar-primary] text-[--sidebar-primary-foreground] hover:bg-[--sidebar-primary]/90 hover:text-[--sidebar-primary-foreground]"
                                                                         )}
                                                                     >
-                                                                        <Link href={child.href}>
+                                                                        <Link href={child.href} onClick={handleLinkClick}>
                                                                             <child.icon size={14} />
                                                                             <span>{child.label}</span>
                                                                             {child.badge !== undefined && (
@@ -173,7 +179,7 @@ export function AppSidebar({ role, navItems }: AppSidebarProps) {
                                                     "bg-[--sidebar-primary] text-[--sidebar-primary-foreground] hover:bg-[--sidebar-primary]/90 hover:text-[--sidebar-primary-foreground]"
                                                 )}
                                             >
-                                                <Link href={item.href}>
+                                                <Link href={item.href} onClick={handleLinkClick}>
                                                     <item.icon size={16} className="shrink-0" />
                                                     <span>{item.label}</span>
                                                     {item.badge !== undefined && (
