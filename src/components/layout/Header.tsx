@@ -47,26 +47,33 @@ export function Header({ title, onMenuClick }: HeaderProps) {
     const toggle = (id: string) => setExpandedId(prev => (prev === id ? null : id));
 
     return (
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 sm:gap-3 h-14 px-3 sm:px-5 bg-[--muted] backdrop-blur-md border-b border-[--border] shadow-sm">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 sm:gap-3 h-14 px-3 sm:px-5 bg-[--muted] backdrop-blur-md border-b border-[--border] shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
                 <SidebarTrigger className="-ml-1 shrink-0" />
                 <h1 className="text-sm font-semibold text-[--foreground] truncate min-w-0">{translatedTitle}</h1>
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <div className="flex items-center gap-1 sm:gap-3 shrink-0">
                 {/* ── Language Switcher ── */}
-                <div className="flex items-center h-7 p-0.5 rounded-md border border-[--border] bg-[--background] text-[11px] font-semibold select-none shrink-0">
+                <div className="relative flex items-center h-7 p-0.5 rounded-md border border-border bg-background text-[10px] sm:text-[11px] font-semibold select-none shrink-0">
+                    <span
+                        className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-sm bg-sidebar shadow-sm transition-transform duration-200 ease-out ${currentLang.startsWith("bn") ? "translate-x-full" : "translate-x-0"}`}
+                        style={{ left: "2px" }}
+                        aria-hidden
+                    />
                     <button
                         onClick={() => i18n.changeLanguage("en")}
-                        className={`px-1.5 sm:px-2 h-full rounded-sm transition-colors cursor-pointer ${!currentLang.startsWith("bn") ? "bg-[--primary] text-[--primary-foreground]" : "text-[--muted-foreground] hover:text-[--foreground]"}`}
+                        className={`relative z-10 px-1.5 sm:px-2.5 h-full rounded-sm cursor-pointer transition-colors ${!currentLang.startsWith("bn") ? "text-accent" : "text-[--muted-foreground] hover:text-[--foreground]"}`}
                         aria-label="Switch to English"
+                        aria-pressed={!currentLang.startsWith("bn")}
                     >
                         EN
                     </button>
                     <button
                         onClick={() => i18n.changeLanguage("bn")}
-                        className={`px-1.5 sm:px-2 h-full rounded-sm transition-colors cursor-pointer ${currentLang.startsWith("bn") ? "bg-[--primary] text-[--primary-foreground]" : "text-[--muted-foreground] hover:text-[--foreground]"}`}
+                        className={`relative z-10 px-1.5 sm:px-2.5 h-full rounded-sm cursor-pointer transition-colors ${currentLang.startsWith("bn") ? "text-accent" : "text-[--muted-foreground] hover:text-[--foreground]"}`}
                         aria-label="Switch to Bengali"
+                        aria-pressed={currentLang.startsWith("bn")}
                     >
                         বাং
                     </button>
