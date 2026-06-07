@@ -232,6 +232,7 @@ export interface ExamMark {
 // ─── Payment ─────────────────────────────────────────────────────────────────
 export interface Payment {
   _id: string;
+  paymentId?: string;
   studentId: string | Student;
   courseId: string | Course;
   amount: number;

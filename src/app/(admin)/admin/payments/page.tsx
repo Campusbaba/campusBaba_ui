@@ -213,6 +213,7 @@ export default function PaymentsPage() {
 
     // ─── Payment Columns ──────────────────────────────────────────────────────
     const paymentColumns: ColumnDef<Payment, unknown>[] = [
+        { id: "paymentId", header: "Payment ID", accessorKey: "paymentId" },
         {
             id: "student", header: "Student",
             accessorFn: r => studentName(r.studentId as Student | string),
