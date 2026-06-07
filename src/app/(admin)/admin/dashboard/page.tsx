@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type { DashboardStats } from "@/types/viewModels";
+import { useTranslation } from "react-i18next";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -39,10 +40,11 @@ interface ScheduleRaw {
 
 // ─── Shared empty chart placeholder ──────────────────────────────────────────
 function EmptyChart() {
+    const { t } = useTranslation();
     return (
         <div className="flex flex-col items-center justify-center h-50 text-[--muted-foreground]">
             <TrendingUp size={32} className="mb-2 opacity-20" />
-            <p className="text-sm">No data available yet</p>
+            <p className="text-sm">{t("dashboard.noData")}</p>
         </div>
     );
 }
@@ -85,6 +87,7 @@ function StatCard({ label, value, icon: Icon, color, bg }: {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
+    const { t } = useTranslation();
     const { stats, enrollmentRatio, activeRatio, attendanceRatio, todaysSchedule, paymentStats } = useDashboard();
 
     const overview = stats.data as DashboardStats | null;
@@ -100,11 +103,12 @@ export default function AdminDashboard() {
             count: d.count,
         })) ?? [];
 
-    // Student status pie: [{ status, count }] → [{ name, value }]
+    // Student status pie: [{ status, count }] → [{ name, value, statusKey }]
     const studentStatusData = (activeRatio.data as ActiveRatioRaw[] | null)
         ?.map(d => ({
-            name: d.status.charAt(0).toUpperCase() + d.status.slice(1),
+            name: t(`dashboard.${d.status.toLowerCase()}`, d.status.charAt(0).toUpperCase() + d.status.slice(1)),
             value: d.count,
+            statusKey: d.status.toLowerCase(),
         })) ?? [];
 
     // Attendance trend: last 14 days → [{ date:"MM/DD", rate }]
@@ -118,20 +122,20 @@ export default function AdminDashboard() {
     // Payment status: byStatus → [{ name, value, amount, fill }]
     const ps = paymentStats.data as PaymentStatsRaw | null;
     const paymentStatusData = (ps?.byStatus ?? []).map(s => ({
-        name: s._id.charAt(0).toUpperCase() + s._id.slice(1),
+        name: t(`dashboard.${s._id.toLowerCase()}`, s._id.charAt(0).toUpperCase() + s._id.slice(1)),
         value: s.count,
         amount: s.totalAmount,
-        fill: STATUS_COLORS[s._id] ?? "#94a3b8",
+        fill: STATUS_COLORS[s._id.toLowerCase()] ?? "#94a3b8",
     }));
 
     // Today's schedule
     const schedule = (todaysSchedule.data as ScheduleRaw[] | null) ?? [];
 
     const statCards = [
-        { label: "Total Students", value: overview?.studentsEnrolled ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-50" },
-        { label: "Active Students", value: overview?.activeStudents ?? 0, icon: UserCheck, color: "text-green-500", bg: "bg-green-50" },
-        { label: "Teachers", value: overview?.teachersEnrolled ?? 0, icon: Briefcase, color: "text-yellow-500", bg: "bg-yellow-50" },
-        { label: "Classes Today", value: overview?.todaysClasses ?? 0, icon: Clock, color: "text-red-500", bg: "bg-red-50" },
+        { label: t("dashboard.totalStudents"), value: overview?.studentsEnrolled ?? 0, icon: GraduationCap, color: "text-blue-500", bg: "bg-blue-50" },
+        { label: t("dashboard.activeStudents"), value: overview?.activeStudents ?? 0, icon: UserCheck, color: "text-green-500", bg: "bg-green-50" },
+        { label: t("dashboard.teachers"), value: overview?.teachersEnrolled ?? 0, icon: Briefcase, color: "text-yellow-500", bg: "bg-yellow-50" },
+        { label: t("dashboard.classesToday"), value: overview?.todaysClasses ?? 0, icon: Clock, color: "text-red-500", bg: "bg-red-50" },
     ];
 
     return (
@@ -140,9 +144,9 @@ export default function AdminDashboard() {
             <main className="p-5 space-y-6">
                 {/* Top action bar */}
                 <div className="flex items-center justify-between">
-                    <p className="text-sm text-[--muted-foreground]">Overview of your school at a glance</p>
+                    <p className="text-sm text-[--muted-foreground]">{t("dashboard.overview")}</p>
                     <Button size="sm" onClick={() => setRegisterOpen(true)}>
-                        <UserPlus size={14} className="mr-2" />Register User
+                        <UserPlus size={14} className="mr-2" />{t("dashboard.registerUser")}
                     </Button>
                 </div>
 
@@ -167,7 +171,7 @@ export default function AdminDashboard() {
                                     <TrendingUp size={18} className="text-green-500" />
                                 </span>
                                 <div>
-                                    <p className="text-xs text-[--muted-foreground]">Total Revenue</p>
+                                    <p className="text-xs text-[--muted-foreground]">{t("dashboard.totalRevenue")}</p>
                                     <p className="text-lg font-bold text-green-600">{formatCurrency(ps?.totalRevenue ?? 0)}</p>
                                 </div>
                             </div>
@@ -180,7 +184,7 @@ export default function AdminDashboard() {
                                     <CreditCard size={18} className="text-yellow-500" />
                                 </span>
                                 <div>
-                                    <p className="text-xs text-[--muted-foreground]">Pending Amount</p>
+                                    <p className="text-xs text-[--muted-foreground]">{t("dashboard.pendingAmount")}</p>
                                     <p className="text-lg font-bold text-yellow-600">{formatCurrency(ps?.pendingAmount ?? 0)}</p>
                                 </div>
                             </div>
@@ -193,7 +197,7 @@ export default function AdminDashboard() {
                                     <Calendar size={18} className="text-blue-500" />
                                 </span>
                                 <div>
-                                    <p className="text-xs text-[--muted-foreground]">Active Teachers</p>
+                                    <p className="text-xs text-[--muted-foreground]">{t("dashboard.activeTeachers")}</p>
                                     <p className="text-lg font-bold text-blue-600">{loading ? "—" : (overview?.activeTeachers ?? 0).toLocaleString()}</p>
                                 </div>
                             </div>
@@ -205,8 +209,8 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Student Enrollment Trend</CardTitle>
-                            <p className="text-xs text-[--muted-foreground]">Monthly new student enrollments</p>
+                            <CardTitle>{t("dashboard.enrollmentTrend")}</CardTitle>
+                            <p className="text-xs text-[--muted-foreground]">{t("dashboard.enrollmentTrendSub")}</p>
                         </CardHeader>
                         <CardContent>
                             {enrollmentTrend.length === 0 ? <EmptyChart /> : (
@@ -222,7 +226,7 @@ export default function AdminDashboard() {
                                         <XAxis dataKey="month" tick={{ fontSize: 10 }} />
                                         <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
                                         <Tooltip />
-                                        <Area type="monotone" dataKey="count" name="Enrollments"
+                                        <Area type="monotone" dataKey="count" name={t("dashboard.enrollments")}
                                             stroke="#3b6ef8" fill="url(#enrollGrad)" strokeWidth={2} dot={{ r: 3 }} />
                                     </AreaChart>
                                 </ResponsiveContainer>
@@ -232,8 +236,8 @@ export default function AdminDashboard() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Attendance Rate</CardTitle>
-                            <p className="text-xs text-[--muted-foreground]">Daily attendance % — last 14 days</p>
+                            <CardTitle>{t("dashboard.attendanceRate")}</CardTitle>
+                            <p className="text-xs text-[--muted-foreground]">{t("dashboard.attendanceRateSub")}</p>
                         </CardHeader>
                         <CardContent>
                             {attendanceTrend.length === 0 ? <EmptyChart /> : (
@@ -248,8 +252,8 @@ export default function AdminDashboard() {
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                                         <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                                         <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
-                                        <Tooltip formatter={(v) => [`${v}%`, "Attendance"]} />
-                                        <Area type="monotone" dataKey="rate" name="Rate"
+                                        <Tooltip formatter={(v) => [`${v}%`, t("dashboard.attendance")]} />
+                                        <Area type="monotone" dataKey="rate" name={t("dashboard.rate")}
                                             stroke="#22c55e" fill="url(#attendGrad)" strokeWidth={2} dot={{ r: 3 }} />
                                     </AreaChart>
                                 </ResponsiveContainer>
@@ -263,8 +267,8 @@ export default function AdminDashboard() {
                     {/* Student Status Pie */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Student Status Breakdown</CardTitle>
-                            <p className="text-xs text-[--muted-foreground]">Distribution by current status</p>
+                            <CardTitle>{t("dashboard.statusBreakdown")}</CardTitle>
+                            <p className="text-xs text-[--muted-foreground]">{t("dashboard.statusBreakdownSub")}</p>
                         </CardHeader>
                         <CardContent>
                             {studentStatusData.length === 0 ? <EmptyChart /> : (
@@ -275,7 +279,7 @@ export default function AdminDashboard() {
                                                 innerRadius={48} outerRadius={78} dataKey="value"
                                                 labelLine={false} label={PiePctLabel as never} paddingAngle={3}>
                                                 {studentStatusData.map((entry, i) => (
-                                                    <Cell key={i} fill={STATUS_COLORS[entry.name.toLowerCase()] ?? PIE_COLORS[i % PIE_COLORS.length]} />
+                                                    <Cell key={i} fill={STATUS_COLORS[entry.statusKey] ?? PIE_COLORS[i % PIE_COLORS.length]} />
                                                 ))}
                                             </Pie>
                                             <Tooltip />
@@ -286,7 +290,7 @@ export default function AdminDashboard() {
                                             <div key={i} className="flex items-center justify-between text-sm">
                                                 <div className="flex items-center gap-2">
                                                     <span className="w-2.5 h-2.5 rounded-full shrink-0"
-                                                        style={{ background: STATUS_COLORS[entry.name.toLowerCase()] ?? PIE_COLORS[i % PIE_COLORS.length] }} />
+                                                        style={{ background: STATUS_COLORS[entry.statusKey] ?? PIE_COLORS[i % PIE_COLORS.length] }} />
                                                     <span className="text-[--muted-foreground]">{entry.name}</span>
                                                 </div>
                                                 <span className="font-semibold">{entry.value.toLocaleString()}</span>
@@ -301,8 +305,8 @@ export default function AdminDashboard() {
                     {/* Payment Status Bar */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Payment Status Overview</CardTitle>
-                            <p className="text-xs text-[--muted-foreground]">Number of payments by status</p>
+                            <CardTitle>{t("dashboard.paymentOverview")}</CardTitle>
+                            <p className="text-xs text-[--muted-foreground]">{t("dashboard.paymentOverviewSub")}</p>
                         </CardHeader>
                         <CardContent>
                             {paymentStatusData.length === 0 ? <EmptyChart /> : (
@@ -313,10 +317,10 @@ export default function AdminDashboard() {
                                         <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                                         <Tooltip formatter={(value, name) =>
                                             name === "value"
-                                                ? [`${value} payments`, "Count"]
-                                                : [formatCurrency(Number(value)), "Amount"]
+                                                ? [t("dashboard.paymentsCount", { count: value }), t("dashboard.count")]
+                                                : [formatCurrency(Number(value)), t("dashboard.amount")]
                                         } />
-                                        <Bar dataKey="value" name="Count" radius={[4, 4, 0, 0]}>
+                                        <Bar dataKey="value" name={t("dashboard.count")} radius={[4, 4, 0, 0]}>
                                             {paymentStatusData.map((entry, i) => (
                                                 <Cell key={i} fill={entry.fill} />
                                             ))}
@@ -331,15 +335,15 @@ export default function AdminDashboard() {
                 {/* ── Today's Schedule ──────────────────────────────── */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Today&apos;s Schedule</CardTitle>
-                        <p className="text-xs text-[--muted-foreground]">Active classes running today</p>
+                        <CardTitle>{t("dashboard.todaysSchedule")}</CardTitle>
+                        <p className="text-xs text-[--muted-foreground]">{t("dashboard.todaysScheduleSub")}</p>
                     </CardHeader>
                     <CardContent>
                         {schedule.length === 0
                             ? (
                                 <div className="flex flex-col items-center justify-center py-8 text-[--muted-foreground]">
                                     <Calendar size={32} className="mb-2 opacity-30" />
-                                    <p className="text-sm">No classes scheduled for today</p>
+                                    <p className="text-sm">{t("dashboard.noClassesToday")}</p>
                                 </div>
                             )
                             : (
@@ -347,8 +351,8 @@ export default function AdminDashboard() {
                                     <table className="w-full text-sm">
                                         <thead>
                                             <tr className="border-b border-[--border]">
-                                                {["Subject", "Time", "Room", "Teacher"].map(h => (
-                                                    <th key={h} className="text-left py-2 px-3 text-xs font-medium text-[--muted-foreground]">{h}</th>
+                                                {[t("dashboard.subject"), t("dashboard.time"), t("dashboard.room"), t("dashboard.teacher")].map((h, idx) => (
+                                                    <th key={idx} className="text-left py-2 px-3 text-xs font-medium text-[--muted-foreground]">{h}</th>
                                                 ))}
                                             </tr>
                                         </thead>

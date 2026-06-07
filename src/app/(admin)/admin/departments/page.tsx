@@ -15,6 +15,7 @@ import { useTeachers } from "@/hooks/useTeachers";
 import { Department, Teacher } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { useTranslation } from "react-i18next";
 
 type TF = { name: string; code: string; description: string; headOfDepartment: string; status: string };
 const blank: TF = { name: "", code: "", description: "", headOfDepartment: "", status: "active" };
@@ -27,6 +28,7 @@ const basicFields: { key: keyof TF; label: string; type: string; required: boole
 const statusOptions = [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }];
 
 export default function DepartmentsPage() {
+    const { t } = useTranslation();
     const { departments, loading, createDepartment, updateDepartment, deleteDepartment } = useDepartments();
     const { teachers } = useTeachers();
     const [open, setOpen] = useState(false);
@@ -63,11 +65,11 @@ export default function DepartmentsPage() {
     }
 
     const columns: ColumnDef<Department, unknown>[] = [
-        { id: "name", accessorKey: "name", header: "Name" },
-        { id: "code", accessorKey: "code", header: "Code" },
-        { id: "head", header: "Head", accessorFn: r => { const h = r.headOfDepartment; return (typeof h === "object" && h !== null && 'firstName' in h) ? `${(h as any).firstName} ${(h as any).lastName}` : "—"; } },
-        { id: "description", accessorKey: "description", header: "Description" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
+        { id: "name", accessorKey: "name", header: t("common.fields.name") },
+        { id: "code", accessorKey: "code", header: t("courses.code") },
+        { id: "head", header: t("teachers.designation"), accessorFn: r => { const h = r.headOfDepartment; return (typeof h === "object" && h !== null && 'firstName' in h) ? `${(h as any).firstName} ${(h as any).lastName}` : "—"; } },
+        { id: "description", accessorKey: "description", header: t("common.fields.description") },
+        { id: "status", header: t("common.fields.status"), accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{t(`common.fields.${getValue()}`, String(getValue()))}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 
@@ -76,41 +78,41 @@ export default function DepartmentsPage() {
             <Header title="Departments" />
             <main className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                    <div><h2 className="text-base font-semibold">All Departments</h2><p className="text-sm text-[--muted-foreground]">{departments.length} total</p></div>
-                    <Button onClick={openAdd}><Plus size={15} className="mr-1" />Add Department</Button>
+                    <div><h2 className="text-base font-semibold">{t("departments.allDepartments")}</h2><p className="text-sm text-[--muted-foreground]">{departments.length} {t("common.fields.total")}</p></div>
+                    <Button onClick={openAdd}><Plus size={15} className="mr-1" />{t("departments.addDepartment")}</Button>
                 </div>
-                {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                    : <DataTable data={departments} columns={columns} title="Departments" exportFilename="departments" />}
+                {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("common.operations.loading")}</div>
+                    : <DataTable data={departments} columns={columns} title={t("common.pages.departments")} exportFilename="departments" />}
             </main>
-            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Department" : "Add Department"}>
+            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? t("departments.editDepartment") : t("departments.addDepartment")}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         {basicFields.map(field => (
                             <div key={field.key}>
-                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Label>{t(`common.fields.${field.key}`, field.label)}{field.required && " *"}</Label>
                                 <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} />
                             </div>
                         ))}
-                        <div className="col-span-2"><Label>Description</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
+                        <div className="col-span-2"><Label>{t("common.fields.description")}</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
                         <div>
-                            <Label>Head of Department</Label>
+                            <Label>{t("teachers.designation")}</Label>
                             <FormCombobox
                                 items={teachers}
                                 value={form.headOfDepartment}
                                 onValueChange={v => f("headOfDepartment", v)}
-                                placeholder="Select teacher"
+                                placeholder={t("common.operations.select")}
                                 renderItem={teacher => teacher.teacherId + "-" + teacher.firstName + " " + teacher.lastName}
                                 getItemValue={teacher => teacher._id}
                                 getItemLabel={teacher => teacher.teacherId + "-" + teacher.firstName + " " + teacher.lastName}
                             />
                         </div>
                         <div>
-                            <Label>Status</Label>
+                            <Label>{t("common.fields.status")}</Label>
                             <FormCombobox
-                                items={statusOptions}
+                                items={statusOptions.map(opt => ({ value: opt.value, label: t(`common.fields.${opt.value}`, opt.label) }))}
                                 value={form.status}
                                 onValueChange={v => f("status", v)}
-                                placeholder="Select status"
+                                placeholder={t("common.operations.select")}
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
                                 getItemLabel={opt => opt.label}
@@ -118,13 +120,13 @@ export default function DepartmentsPage() {
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Create"}</Button>
+                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>{t("common.operations.cancel")}</Button>
+                        <Button size="sm" type="submit" disabled={busy}>{busy ? t("common.operations.saving") : editing ? t("common.operations.update") : t("common.operations.create")}</Button>
                     </div>
                 </form>
             </FormDialog>
             <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
-                message={`Delete department "${confirm?.name}"? This cannot be undone.`} />
+                message={t("common.operations.deleteConfirm")} />
         </>
     );
 }

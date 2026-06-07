@@ -16,6 +16,7 @@ import { useCourses } from "@/hooks/useCourses";
 import { ClassRoom, Department, Course } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { useTranslation } from "react-i18next";
 
 type TF = { classRoomId: string; name: string; roomNumber: string; departmentId: string; courseId: string; capacity: string; academicYear: string; semester: string; status: string };
 const blank: TF = { classRoomId: "", name: "", roomNumber: "", departmentId: "", courseId: "", capacity: "", academicYear: "", semester: "", status: "active" };
@@ -34,6 +35,7 @@ const detailFields: { key: keyof TF; label: string; type: string; required: bool
 const statusOptions = [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "completed", label: "Completed" }];
 
 export default function ClassRoomsPage() {
+    const { t } = useTranslation();
     const { classRooms, loading, pagination, createClassRoom, updateClassRoom, deleteClassRoom } = useClassRooms();
     const { departments } = useDepartments();
     const { courses } = useCourses();
@@ -71,16 +73,16 @@ export default function ClassRoomsPage() {
     }
 
     const columns: ColumnDef<ClassRoom, unknown>[] = [
-        { id: "classRoomId", accessorKey: "classRoomId", header: "ID" },
-        { id: "name", accessorKey: "name", header: "Class Name" },
-        { id: "roomNumber", accessorKey: "roomNumber", header: "Room No." },
-        { id: "course", header: "Course", accessorFn: r => (r.courseId as { name?: string })?.name ?? "—" },
-        { id: "department", header: "Department", accessorFn: r => (r.departmentId as { name?: string })?.name ?? "—" },
-        { id: "capacity", accessorKey: "capacity", header: "Capacity" },
-        { id: "enrolled", accessorKey: "currentEnrollment", header: "Enrolled" },
-        { id: "academicYear", accessorKey: "academicYear", header: "Academic Year" },
-        { id: "semester", accessorKey: "semester", header: "Semester" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : String(getValue()) === "completed" ? "secondary" : "secondary"}>{String(getValue())}</Badge> },
+        { id: "classRoomId", accessorKey: "classRoomId", header: t("common.fields.id") },
+        { id: "name", accessorKey: "name", header: t("classrooms.className") },
+        { id: "roomNumber", accessorKey: "roomNumber", header: t("classrooms.roomNumber") },
+        { id: "course", header: t("classrooms.course"), accessorFn: r => (r.courseId as { name?: string })?.name ?? "—" },
+        { id: "department", header: t("classrooms.department"), accessorFn: r => (r.departmentId as { name?: string })?.name ?? "—" },
+        { id: "capacity", accessorKey: "capacity", header: t("classrooms.capacity") },
+        { id: "enrolled", accessorKey: "currentEnrollment", header: t("classrooms.enrolled") },
+        { id: "academicYear", accessorKey: "academicYear", header: t("classrooms.academicYear") },
+        { id: "semester", accessorKey: "semester", header: t("classrooms.semester") },
+        { id: "status", header: t("classrooms.status"), accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{t(`common.fields.${getValue()}`, String(getValue()))}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 
@@ -89,44 +91,44 @@ export default function ClassRoomsPage() {
             <Header title="Classrooms" />
             <main className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                    <div><h2 className="text-base font-semibold">All Classrooms</h2><p className="text-sm text-[--muted-foreground]">{pagination?.totalItems ?? 0} total</p></div>
-                    <Button onClick={openAdd}><Plus size={15} className="mr-1" />Add Classroom</Button>
+                    <div><h2 className="text-base font-semibold">{t("classrooms.allClassrooms")}</h2><p className="text-sm text-[--muted-foreground]">{pagination?.totalItems ?? 0} {t("common.fields.total")}</p></div>
+                    <Button onClick={openAdd}><Plus size={15} className="mr-1" />{t("classrooms.addClassroom")}</Button>
                 </div>
-                {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                    : <DataTable data={classRooms} columns={columns} title="Classrooms" exportFilename="classrooms" />}
+                {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("common.operations.loading")}</div>
+                    : <DataTable data={classRooms} columns={columns} title={t("common.pages.classrooms")} exportFilename="classrooms" />}
             </main>
-            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Classroom" : "Add Classroom"}>
+            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? t("classrooms.editClassroom") : t("classrooms.addClassroom")}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div className="col-span-2">
-                            <Label>Class ID</Label>
+                            <Label>{t("classrooms.classId")}</Label>
                             <Input value={form.classRoomId} onChange={e => f("classRoomId", e.target.value)} placeholder="e.g. CR-0001" />
                         </div>
                         {basicFields.map(field => (
                             <div key={field.key}>
-                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Label>{t(field.key === "name" ? "classrooms.className" : `classrooms.${field.key}`, field.label)}{field.required && " *"}</Label>
                                 <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} placeholder={field.placeholder} />
                             </div>
                         ))}
                         <div>
-                            <Label>Department *</Label>
+                            <Label>{t("classrooms.department")} *</Label>
                             <FormCombobox
                                 items={departments}
                                 value={form.departmentId}
                                 onValueChange={v => f("departmentId", v)}
-                                placeholder="Select department"
+                                placeholder={t("common.operations.select")}
                                 renderItem={dept => dept.name}
                                 getItemValue={dept => dept._id}
                                 getItemLabel={dept => dept.name}
                             />
                         </div>
                         <div>
-                            <Label>Course *</Label>
+                            <Label>{t("classrooms.course")} *</Label>
                             <FormCombobox
                                 items={courses}
                                 value={form.courseId}
                                 onValueChange={v => f("courseId", v)}
-                                placeholder="Select course"
+                                placeholder={t("common.operations.select")}
                                 renderItem={course => course.name}
                                 getItemValue={course => course._id}
                                 getItemLabel={course => course.name}
@@ -134,17 +136,17 @@ export default function ClassRoomsPage() {
                         </div>
                         {detailFields.map(field => (
                             <div key={field.key}>
-                                <Label>{field.label}{field.required && " *"}</Label>
+                                <Label>{t(`classrooms.${field.key}`, field.label)}{field.required && " *"}</Label>
                                 <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} required={field.required} placeholder={field.placeholder} />
                             </div>
                         ))}
                         <div>
-                            <Label>Status</Label>
+                            <Label>{t("classrooms.status")}</Label>
                             <FormCombobox
-                                items={statusOptions}
+                                items={statusOptions.map(opt => ({ value: opt.value, label: t(`common.fields.${opt.value}`, opt.label) }))}
                                 value={form.status}
                                 onValueChange={v => f("status", v)}
-                                placeholder="Select status"
+                                placeholder={t("common.operations.select")}
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
                                 getItemLabel={opt => opt.label}
@@ -152,13 +154,13 @@ export default function ClassRoomsPage() {
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Create"}</Button>
+                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>{t("common.operations.cancel")}</Button>
+                        <Button size="sm" type="submit" disabled={busy}>{busy ? t("common.operations.saving") : editing ? t("common.operations.update") : t("common.operations.create")}</Button>
                     </div>
                 </form>
             </FormDialog>
             <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
-                message={`Delete classroom "${confirm?.name}"? This cannot be undone.`} />
+                message={t("common.operations.deleteConfirm")} />
         </>
     );
 }

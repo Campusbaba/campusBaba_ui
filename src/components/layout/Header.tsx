@@ -9,6 +9,7 @@ import { useActiveNotices } from "@/hooks/useNotices";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface HeaderProps {
     title: string;
@@ -22,6 +23,7 @@ const priorityColor: Record<string, string> = {
 };
 
 export function Header({ title, onMenuClick }: HeaderProps) {
+    const { t, i18n } = useTranslation();
     const { user, isLoading } = useAuth();
     const router = useRouter();
 
@@ -32,6 +34,11 @@ export function Header({ title, onMenuClick }: HeaderProps) {
     const userName = user?.name || user?.email || "User";
     const userRole = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "";
 
+    const currentLang = i18n.language || "en";
+
+    const pageKey = title.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const translatedTitle = t(`common.pages.${pageKey}`, title);
+
     const handleLogout = async () => {
         await signOut({ redirect: false });
         router.push("/login");
@@ -40,13 +47,31 @@ export function Header({ title, onMenuClick }: HeaderProps) {
     const toggle = (id: string) => setExpandedId(prev => (prev === id ? null : id));
 
     return (
-        <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-5 bg-[--muted] backdrop-blur-md border-b border-[--border] shadow-sm">
-            <div className="flex items-center gap-3">
-                <SidebarTrigger className="-ml-1" />
-                <h1 className="text-sm font-semibold text-[--foreground]">{title}</h1>
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 sm:gap-3 h-14 px-3 sm:px-5 bg-[--muted] backdrop-blur-md border-b border-[--border] shadow-sm">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <SidebarTrigger className="-ml-1 shrink-0" />
+                <h1 className="text-sm font-semibold text-[--foreground] truncate min-w-0">{translatedTitle}</h1>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                {/* ── Language Switcher ── */}
+                <div className="flex items-center h-7 p-0.5 rounded-md border border-[--border] bg-[--background] text-[11px] font-semibold select-none shrink-0">
+                    <button
+                        onClick={() => i18n.changeLanguage("en")}
+                        className={`px-1.5 sm:px-2 h-full rounded-sm transition-colors cursor-pointer ${!currentLang.startsWith("bn") ? "bg-[--primary] text-[--primary-foreground]" : "text-[--muted-foreground] hover:text-[--foreground]"}`}
+                        aria-label="Switch to English"
+                    >
+                        EN
+                    </button>
+                    <button
+                        onClick={() => i18n.changeLanguage("bn")}
+                        className={`px-1.5 sm:px-2 h-full rounded-sm transition-colors cursor-pointer ${currentLang.startsWith("bn") ? "bg-[--primary] text-[--primary-foreground]" : "text-[--muted-foreground] hover:text-[--foreground]"}`}
+                        aria-label="Switch to Bengali"
+                    >
+                        বাং
+                    </button>
+                </div>
+
                 {/* ── Bell / Notices ── */}
                 <Popover>
                     <PopoverTrigger asChild>
@@ -59,7 +84,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0" align="end">
                         <div className="flex items-center justify-between px-4 py-3 border-b border-[--border]">
-                            <span className="text-sm font-semibold">Notices</span>
+                            <span className="text-sm font-semibold">{t("header.notices")}</span>
                             {notices.length > 0 && (
                                 <Badge variant="secondary" className="text-xs">{notices.length}</Badge>
                             )}
@@ -68,11 +93,11 @@ export function Header({ title, onMenuClick }: HeaderProps) {
                         <div className="max-h-105 overflow-y-auto divide-y divide-[--border]">
                             {noticesLoading ? (
                                 <div className="flex items-center justify-center py-8 gap-2 text-sm text-[--muted-foreground]">
-                                    <Loader2 size={15} className="animate-spin" /> Loading…
+                                    <Loader2 size={15} className="animate-spin" /> {t("header.loading")}
                                 </div>
                             ) : notices.length === 0 ? (
                                 <p className="py-8 text-center text-sm text-[--muted-foreground]">
-                                    No active notices
+                                    {t("header.noNotices")}
                                 </p>
                             ) : (
                                 notices.map(notice => {
@@ -161,7 +186,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
                                 onClick={handleLogout}
                             >
                                 <LogOut size={16} />
-                                Logout
+                                {t("header.logout")}
                             </Button>
                         </div>
                     </PopoverContent>

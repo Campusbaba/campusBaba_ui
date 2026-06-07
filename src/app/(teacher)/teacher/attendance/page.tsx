@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Header } from "@/components/layout/Header";
@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Attendance, Student } from "@/types/viewModels";
 import { formatDate } from "@/lib/utils";
 import { ClipboardList, History } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type AttendanceMark = "present" | "absent" | "late" | "excused";
 
@@ -28,6 +29,7 @@ const statusOptions = [
 ];
 
 export default function TeacherAttendancePage() {
+    const { t } = useTranslation();
     const { referenceId, user } = useAuth();
     const { attendances, loading: histLoading, fetchAttendances, createAttendance, fetchTodayAttendance: fetchTodayAtt } = useAttendance({}, false);
     const { students, fetchStudents, loading: studLoading } = useStudents({}, false);
@@ -95,9 +97,9 @@ export default function TeacherAttendancePage() {
                 ...(user ? { markedBy: user.role } : {}),
             });
             setTodayAttMap(prev => ({ ...prev, [s._id]: status }));
-            toast.success(`${s.firstName} ${s.lastName} marked ${status}`);
+            toast.success(t("attendance.markedStatus", { name: `${s.firstName} ${s.lastName}`, status: t(`attendance.${status}`) }));
         } catch {
-            toast.error(`Failed to mark ${s.firstName} ${s.lastName}`);
+            toast.error(t("attendance.failedToMark", { name: `${s.firstName} ${s.lastName}` }));
         } finally {
             setBusy(false);
         }
@@ -122,28 +124,28 @@ export default function TeacherAttendancePage() {
             if (attendanceDate === todayStr) {
                 setTodayAttMap(prev => ({ ...prev, [markingStudent._id]: markStatus }));
             }
-            toast.success(`Attendance saved for ${markingStudent.firstName} ${markingStudent.lastName}`);
+            toast.success(t("attendance.attendanceSaved", { name: `${markingStudent.firstName} ${markingStudent.lastName}` }));
             setMarkingStudent(null);
         } catch {
-            toast.error("Failed to save attendance");
+            toast.error(t("attendance.failedToSaveAttendance"));
         } finally {
             setBusy(false);
         }
     }
 
     const studentColumns: ColumnDef<Student, unknown>[] = [
-        { id: "name", header: "Student", accessorFn: r => `${r.firstName} ${r.lastName}` },
-        { id: "studentId", accessorKey: "studentId", header: "Student ID" },
+        { id: "name", header: t("attendance.student"), accessorFn: r => `${r.firstName} ${r.lastName}` },
+        { id: "studentId", accessorKey: "studentId", header: t("attendance.studentId") },
         {
-            id: "status", accessorKey: "status", header: "Status",
-            cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge>,
+            id: "status", accessorKey: "status", header: t("attendance.status"),
+            cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{t(`attendance.${getValue()}`, String(getValue()))}</Badge>,
         },
         {
-            id: "today", header: "Today",
+            id: "today", header: t("attendance.today"),
             cell: ({ row: { original: s } }) => {
                 const st = todayAttMap[s._id];
                 if (!st) return <span className="text-xs text-[--muted-foreground]">—</span>;
-                return <Badge variant={st === "present" ? "default" : "destructive"}>{st}</Badge>;
+                return <Badge variant={st === "present" ? "default" : "destructive"}>{t(`attendance.${st}`)}</Badge>;
             }
         },
         {
@@ -152,14 +154,14 @@ export default function TeacherAttendancePage() {
                 const current = todayAttMap[s._id];
                 return (
                     <div className="flex gap-1">
-                        <Button size="sm" variant={current === "present" ? "default" : "outline"} className={current === "present" ? "" : "text-green-600 border-green-600 hover:bg-green-50"} onClick={() => quickMark(s, "present")} title="Mark present for today">
+                        <Button size="sm" variant={current === "present" ? "default" : "outline"} className={current === "present" ? "" : "text-green-600 border-green-600 hover:bg-green-50"} onClick={() => quickMark(s, "present")} title={t("attendance.present")}>
                             ✓
                         </Button>
-                        <Button size="sm" variant={current === "absent" ? "destructive" : "outline"} className={current === "absent" ? "" : "text-red-600 border-red-600 hover:bg-red-50"} onClick={() => quickMark(s, "absent")} title="Mark absent for today">
+                        <Button size="sm" variant={current === "absent" ? "destructive" : "outline"} className={current === "absent" ? "" : "text-red-600 border-red-600 hover:bg-red-50"} onClick={() => quickMark(s, "absent")} title={t("attendance.absent")}>
                             ✗
                         </Button>
                         <Button size="sm" variant="outline" onClick={() => openMarkModal(s)}>
-                            <ClipboardList size={13} className="mr-1" /> Mark
+                            <ClipboardList size={13} className="mr-1" /> {t("attendance.mark")}
                         </Button>
                     </div>
                 );
@@ -168,10 +170,10 @@ export default function TeacherAttendancePage() {
     ];
 
     const historyColumns: ColumnDef<Attendance, unknown>[] = [
-        { id: "student", header: "Student", accessorFn: r => { const s = r.studentId; return s && typeof s === "object" ? `${(s as { firstName: string; lastName: string }).firstName} ${(s as { firstName: string; lastName: string }).lastName}` : String(s ?? ""); } },
-        { id: "date", header: "Date", accessorFn: r => formatDate(r.date) },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "present" ? "default" : "destructive"}>{String(getValue())}</Badge> },
-        { id: "remarks", accessorKey: "remarks", header: "Remarks" },
+        { id: "student", header: t("attendance.student"), accessorFn: r => { const s = r.studentId; return s && typeof s === "object" ? `${(s as { firstName: string; lastName: string }).firstName} ${(s as { firstName: string; lastName: string }).lastName}` : String(s ?? ""); } },
+        { id: "date", header: t("attendance.date"), accessorFn: r => formatDate(r.date) },
+        { id: "status", header: t("attendance.status"), accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "present" ? "default" : "destructive"}>{t(`attendance.${getValue()}`, String(getValue()))}</Badge> },
+        { id: "remarks", accessorKey: "remarks", header: t("attendance.remarks") },
     ];
 
     return (
@@ -181,10 +183,10 @@ export default function TeacherAttendancePage() {
                 {/* Tabs */}
                 <div className="flex gap-2 border-b pb-3">
                     <Button variant={activeTab === "mark" ? "default" : "ghost"} size="sm" onClick={() => setActiveTab("mark")}>
-                        <ClipboardList size={14} className="mr-1" /> Mark Attendance
+                        <ClipboardList size={14} className="mr-1" /> {t("attendance.markAttendance")}
                     </Button>
                     <Button variant={activeTab === "history" ? "default" : "ghost"} size="sm" onClick={() => setActiveTab("history")}>
-                        <History size={14} className="mr-1" /> History
+                        <History size={14} className="mr-1" /> {t("attendance.history")}
                     </Button>
                 </div>
 
@@ -193,11 +195,11 @@ export default function TeacherAttendancePage() {
                     <div className="space-y-4">
                         <div className="flex flex-wrap items-end gap-4">
                             <div className="flex flex-col gap-1">
-                                <Label className="text-xs">Classroom</Label>
+                                <Label className="text-xs">{t("attendance.classroom")}</Label>
                                 <Select value={selectedClassRoomId} onValueChange={setSelectedClassRoomId}
                                     disabled={assignedClassRooms.length === 0}>
                                     <SelectTrigger className="w-52">
-                                        <SelectValue placeholder={assignedClassRooms.length === 0 ? "No assigned classes" : "Select classroom"} />
+                                        <SelectValue placeholder={assignedClassRooms.length === 0 ? t("attendance.noAssignedClasses") : t("attendance.selectClassroom")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {assignedClassRooms.map(cr => <SelectItem key={cr._id} value={cr._id}>{cr.name}</SelectItem>)}
@@ -206,8 +208,8 @@ export default function TeacherAttendancePage() {
                             </div>
                         </div>
                         {studLoading
-                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                            : <DataTable data={students} columns={studentColumns} title="Students" exportFilename="students" />}
+                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("header.loading")}</div>
+                            : <DataTable data={students} columns={studentColumns} title={t("attendance.students")} exportFilename="students" />}
                     </div>
                 )}
 
@@ -216,27 +218,27 @@ export default function TeacherAttendancePage() {
                     <div className="space-y-4">
                         <div className="flex flex-wrap items-end gap-4">
                             <div className="flex flex-col gap-1">
-                                <Label className="text-xs">Classroom</Label>
+                                <Label className="text-xs">{t("attendance.classroom")}</Label>
                                 <Select value={historyClassRoomId} onValueChange={setHistoryClassRoomId}
                                     disabled={assignedClassRooms.length === 0}>
-                                    <SelectTrigger className="w-52"><SelectValue placeholder="Select classroom" /></SelectTrigger>
+                                    <SelectTrigger className="w-52"><SelectValue placeholder={t("attendance.selectClassroom")} /></SelectTrigger>
                                     <SelectContent>
                                         {assignedClassRooms.map(cr => <SelectItem key={cr._id} value={cr._id}>{cr.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="flex flex-col gap-1">
-                                <Label className="text-xs">Filter by Date</Label>
+                                <Label className="text-xs">{t("attendance.filterByDate")}</Label>
                                 <div className="flex items-center gap-2">
                                     <Input type="date" value={historyDate} onChange={e => setHistoryDate(e.target.value)} className="w-44" />
-                                    {historyDate && <Button variant="ghost" size="sm" onClick={() => setHistoryDate("")}>Clear</Button>}
+                                    {historyDate && <Button variant="ghost" size="sm" onClick={() => setHistoryDate("")}>{t("attendance.clear")}</Button>}
                                 </div>
                             </div>
-                            <p className="text-sm text-[--muted-foreground] pb-1">{attendances.length} records</p>
+                            <p className="text-sm text-[--muted-foreground] pb-1">{t("attendance.records", { count: attendances.length })}</p>
                         </div>
                         {histLoading
-                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                            : <DataTable data={attendances} columns={historyColumns} title="Attendance History" exportFilename="teacher-attendance-history" />}
+                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("header.loading")}</div>
+                            : <DataTable data={attendances} columns={historyColumns} title={t("attendance.attendanceHistory")} exportFilename="teacher-attendance-history" />}
                     </div>
                 )}
             </main>
@@ -245,29 +247,29 @@ export default function TeacherAttendancePage() {
             <FormDialog
                 open={!!markingStudent}
                 onClose={() => setMarkingStudent(null)}
-                title={markingStudent ? `Mark Attendance – ${markingStudent.firstName} ${markingStudent.lastName}` : ""}
+                title={markingStudent ? t("attendance.markAttendanceTitle", { name: `${markingStudent.firstName} ${markingStudent.lastName}` }) : ""}
             >
                 <div className="space-y-4">
                     <div className="flex flex-col gap-1">
-                        <Label className="text-xs">Date *</Label>
+                        <Label className="text-xs">{t("attendance.date")} *</Label>
                         <Input type="date" value={attendanceDate} onChange={e => setAttendanceDate(e.target.value)} className="w-44" />
                     </div>
                     <div className="flex flex-col gap-1">
-                        <Label className="text-xs">Status *</Label>
+                        <Label className="text-xs">{t("attendance.status")} *</Label>
                         <Select value={markStatus} onValueChange={v => setMarkStatus(v as AttendanceMark)}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
-                                {statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                {statusOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{t(`attendance.${opt.value}`)}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="flex flex-col gap-1">
-                        <Label className="text-xs">Remarks</Label>
-                        <Input placeholder="Optional" value={markRemarks} onChange={e => setMarkRemarks(e.target.value)} />
+                        <Label className="text-xs">{t("attendance.remarks")}</Label>
+                        <Input placeholder={t("attendance.optional")} value={markRemarks} onChange={e => setMarkRemarks(e.target.value)} />
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" size="sm" onClick={() => setMarkingStudent(null)}>Cancel</Button>
-                        <Button size="sm" onClick={handleMarkSubmit} disabled={busy}>{busy ? "Saving…" : "Submit"}</Button>
+                        <Button variant="outline" size="sm" onClick={() => setMarkingStudent(null)}>{t("attendance.cancel")}</Button>
+                        <Button size="sm" onClick={handleMarkSubmit} disabled={busy}>{busy ? t("attendance.saving") : t("attendance.submit")}</Button>
                     </div>
                 </div>
             </FormDialog>
