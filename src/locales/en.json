@@ -14,7 +14,7 @@
       "payments": "Payments",
       "exams": "Exams",
       "routines": "Routines",
-      "notices": "Notices", 
+      "notices": "Notices",
       "reports": "Reports",
       "exammarks": "Exam Marks",
       "enrollment": "Enrollment Report",
@@ -746,6 +746,78 @@
     "ofTotal": "of Total",
     "now": "Now",
     "atGrowth": "at {{rate}}% growth"
+  },
+  "studentPortal": {
+    "dashboard": {
+      "title": "My Dashboard",
+      "loading": "Loading dashboard…",
+      "feesPaid": "Fees Paid",
+      "pendingAmount": "{{amount}} pending",
+      "allCleared": "All cleared",
+      "attendance": "Attendance",
+      "daysPresent": "{{present}} / {{total}} days present",
+      "avgScore": "Avg Score",
+      "examsGraded": "{{count}} exams graded",
+      "classroom": "Classroom",
+      "courseLabel": "Course: {{name}}",
+      "upcomingExams": "Upcoming Exams",
+      "next7Days": "Next 7 days",
+      "subjects": "Subjects",
+      "currentYear": "Current Year",
+      "attendanceTrend": "Attendance Trend",
+      "noAttendanceData": "No attendance data available",
+      "recentActivities": "Exam Schedule",
+      "noRecentActivities": "No exam schedule been published"
+    },
+    "attendance": {
+      "myAttendance": "My Attendance",
+      "attendanceRecords": "Attendance Records",
+      "date": "Date",
+      "subject": "Subject",
+      "general": "General",
+      "status": "Status",
+      "remarks": "Remarks",
+      "loading": "Loading…",
+      "attendance": "Attendance"
+    },
+    "exams": {
+      "examSchedule": "Exam Schedule",
+      "loading": "Loading…",
+      "course": "Course",
+      "totalMarks": "Total Marks:",
+      "noExams": "No exams scheduled yet."
+    },
+    "examMarks": {
+      "examResults": "Exam Results",
+      "exam": "Exam",
+      "subject": "Subject",
+      "marks": "Marks",
+      "grade": "Grade",
+      "remarks": "Remarks",
+      "loading": "Loading…",
+      "marksTitle": "Marks"
+    },
+    "payments": {
+      "myPayments": "My Payments",
+      "paymentHistory": "Payment History",
+      "year": "Year",
+      "semester": "Semester",
+      "type": "Type",
+      "unknown": "Unknown",
+      "amount": "Amount",
+      "dueDate": "Due Date",
+      "paidDate": "Paid Date",
+      "status": "Status",
+      "loading": "Loading…",
+      "payments": "Payments"
+    },
+    "routines": {
+      "myRoutine": "My Routine",
+      "loading": "Loading routines…",
+      "room": "Room {{number}}",
+      "teacher": "Teacher",
+      "noRoutines": "No routines scheduled yet."
+    }
   },
   "dashboard": {
     "title": "Dashboard",

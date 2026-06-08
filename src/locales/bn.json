@@ -747,6 +747,78 @@
     "now": "এখন",
     "atGrowth": "{{rate}}% বৃদ্ধিতে"
   },
+  "studentPortal": {
+    "dashboard": {
+      "title": "আমার ড্যাশবোর্ড",
+      "loading": "ড্যাশবোর্ড লোড হচ্ছে…",
+      "feesPaid": "পরিশোধিত ফি",
+      "pendingAmount": "{{amount}} বকেয়া",
+      "allCleared": "সব পরিশোধিত",
+      "attendance": "উপস্থিতি",
+      "daysPresent": "{{total}} দিনের মধ্যে {{present}} দিন উপস্থিত",
+      "avgScore": "গড় স্কোর",
+      "examsGraded": "{{count}} টি পরীক্ষা মূল্যায়িত",
+      "classroom": "শ্রেণিকক্ষ",
+      "courseLabel": "কোর্স: {{name}}",
+      "upcomingExams": "আসন্ন পরীক্ষা",
+      "next7Days": "আগামী ৭ দিন",
+      "subjects": "বিষয়সমূহ",
+      "currentYear": "বর্তমান বছর",
+      "attendanceTrend": "উপস্থিতির প্রবণতা",
+      "noAttendanceData": "কোনো উপস্থিতির তথ্য পাওয়া যায়নি।",
+      "recentActivities": "পরীক্ষার রুটিন",
+      "noRecentActivities": "কোনো পরীক্ষার রুটিন দেয়া হয়নি।"
+    },
+    "attendance": {
+      "myAttendance": "আমার উপস্থিতি",
+      "attendanceRecords": "উপস্থিতির রেকর্ড",
+      "date": "তারিখ",
+      "subject": "বিষয়",
+      "general": "সাধারণ",
+      "status": "অবস্থা",
+      "remarks": "মন্তব্য",
+      "loading": "লোড হচ্ছে…",
+      "attendance": "উপস্থিতি"
+    },
+    "exams": {
+      "examSchedule": "পরীক্ষার সময়সূচি",
+      "loading": "লোড হচ্ছে…",
+      "course": "কোর্স",
+      "totalMarks": "মোট নম্বর:",
+      "noExams": "এখনো কোনো পরীক্ষা নির্ধারিত হয়নি।"
+    },
+    "examMarks": {
+      "examResults": "পরীক্ষার ফলাফল",
+      "exam": "পরীক্ষা",
+      "subject": "বিষয়",
+      "marks": "নম্বর",
+      "grade": "গ্রেড",
+      "remarks": "মন্তব্য",
+      "loading": "লোড হচ্ছে…",
+      "marksTitle": "নম্বর"
+    },
+    "payments": {
+      "myPayments": "আমার পেমেন্ট",
+      "paymentHistory": "পেমেন্টের ইতিহাস",
+      "year": "বছর",
+      "semester": "সেমিস্টার",
+      "type": "ধরন",
+      "unknown": "অজানা",
+      "amount": "পরিমাণ",
+      "dueDate": "পরিশোধের শেষ তারিখ",
+      "paidDate": "পরিশোধের তারিখ",
+      "status": "অবস্থা",
+      "loading": "লোড হচ্ছে…",
+      "payments": "পেমেন্ট"
+    },
+    "routines": {
+      "myRoutine": "আমার রুটিন",
+      "loading": "রুটিন লোড হচ্ছে…",
+      "room": "কক্ষ {{number}}",
+      "teacher": "শিক্ষক",
+      "noRoutines": "এখনো কোনো রুটিন নির্ধারিত হয়নি।"
+    }
+  },
   "dashboard": {
     "title": "ড্যাশবোর্ড",
     "overview": "আপনার বিদ্যালয়ের একনজরে ওভারভিউ",

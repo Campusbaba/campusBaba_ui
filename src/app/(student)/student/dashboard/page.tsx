@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Header } from "@/components/layout/Header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { usePayments } from "@/hooks/usePayments";
@@ -24,6 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export default function StudentDashboard() {
+    const { t } = useTranslation();
     const { referenceId } = useAuth();
     const { student, loading: sLoading, fetchStudent } = useStudents();
     const { payments, loading: pLoading, fetchStudentPayments } = usePayments({}, false);
@@ -98,9 +100,9 @@ export default function StudentDashboard() {
     if (loading && !student) {
         return (
             <>
-                <Header title="Dashboard" />
+                <Header title={t("dashboard.title")} />
                 <main className="p-5 flex items-center justify-center h-[calc(100vh-64px)]">
-                    <div className="text-[--muted-foreground]">Loading dashboard…</div>
+                    <div className="text-[--muted-foreground]">{t("studentPortal.dashboard.loading")}</div>
                 </main>
             </>
         );
@@ -108,7 +110,7 @@ export default function StudentDashboard() {
 
     return (
         <>
-            <Header title="My Dashboard" />
+            <Header title={t("studentPortal.dashboard.title")} />
             <main className="p-5 space-y-6">
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -116,10 +118,10 @@ export default function StudentDashboard() {
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-3 rounded-full bg-green-50 text-green-600"><CreditCard size={24} /></div>
                             <div>
-                                <p className="text-sm font-medium text-[--muted-foreground]">Fees Paid</p>
+                                <p className="text-sm font-medium text-[--muted-foreground]">{t("studentPortal.dashboard.feesPaid")}</p>
                                 <h3 className="text-2xl font-bold">{formatCurrency(totalPaid)}</h3>
                                 <p className="text-xs text-[--muted-foreground]">
-                                    {pendingAmount > 0 ? `${formatCurrency(pendingAmount)} pending` : "All cleared"}
+                                    {pendingAmount > 0 ? t("studentPortal.dashboard.pendingAmount", { amount: formatCurrency(pendingAmount) }) : t("studentPortal.dashboard.allCleared")}
                                 </p>
                             </div>
                         </CardContent>
@@ -129,9 +131,9 @@ export default function StudentDashboard() {
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-3 rounded-full bg-blue-50 text-blue-600"><CalendarCheck size={24} /></div>
                             <div>
-                                <p className="text-sm font-medium text-[--muted-foreground]">Attendance</p>
+                                <p className="text-sm font-medium text-[--muted-foreground]">{t("studentPortal.dashboard.attendance")}</p>
                                 <h3 className="text-2xl font-bold">{attendanceRate !== null ? `${attendanceRate}%` : "—"}</h3>
-                                <p className="text-xs text-[--muted-foreground]">{presentDays} / {totalDays} days present</p>
+                                <p className="text-xs text-[--muted-foreground]">{t("studentPortal.dashboard.daysPresent", { present: presentDays, total: totalDays })}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -140,9 +142,9 @@ export default function StudentDashboard() {
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-3 rounded-full bg-indigo-50 text-indigo-600"><BookOpen size={24} /></div>
                             <div>
-                                <p className="text-sm font-medium text-[--muted-foreground]">Avg Score</p>
+                                <p className="text-sm font-medium text-[--muted-foreground]">{t("studentPortal.dashboard.avgScore")}</p>
                                 <h3 className="text-2xl font-bold">{avgScore !== null ? `${avgScore}%` : "—"}</h3>
-                                <p className="text-xs text-[--muted-foreground]">{marks.length} exams graded</p>
+                                <p className="text-xs text-[--muted-foreground]">{t("studentPortal.dashboard.examsGraded", { count: marks.length })}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -151,9 +153,9 @@ export default function StudentDashboard() {
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-3 rounded-full bg-purple-50 text-purple-600"><GraduationCap size={24} /></div>
                             <div>
-                                <p className="text-sm font-medium text-[--muted-foreground]">Classroom</p>
+                                <p className="text-sm font-medium text-[--muted-foreground]">{t("studentPortal.dashboard.classroom")}</p>
                                 <h3 className="text-lg font-bold truncate max-w-[150px]">{classroomName}</h3>
-                                <p className="text-xs text-[--muted-foreground]">Course: {(student?.classRoomId as { courseId?: { name?: string } })?.courseId?.name ?? "—"}</p>
+                                <p className="text-xs text-[--muted-foreground]">{t("studentPortal.dashboard.courseLabel", { name: (student?.classRoomId as { courseId?: { name?: string } })?.courseId?.name ?? "—" })}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -162,9 +164,9 @@ export default function StudentDashboard() {
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-3 rounded-full bg-orange-50 text-orange-600"><FileCheck size={24} /></div>
                             <div>
-                                <p className="text-sm font-medium text-[--muted-foreground]">Upcoming Exams</p>
+                                <p className="text-sm font-medium text-[--muted-foreground]">{t("studentPortal.dashboard.upcomingExams")}</p>
                                 <h3 className="text-2xl font-bold">{upcomingExams}</h3>
-                                <p className="text-xs text-[--muted-foreground]">Next 7 days</p>
+                                <p className="text-xs text-[--muted-foreground]">{t("studentPortal.dashboard.next7Days")}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -173,9 +175,9 @@ export default function StudentDashboard() {
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-3 rounded-full bg-teal-50 text-teal-600"><LayoutList size={24} /></div>
                             <div>
-                                <p className="text-sm font-medium text-[--muted-foreground]">Subjects</p>
+                                <p className="text-sm font-medium text-[--muted-foreground]">{t("studentPortal.dashboard.subjects")}</p>
                                 <h3 className="text-2xl font-bold">{uniqueSubjects.length}</h3>
-                                <p className="text-xs text-[--muted-foreground]">{(student?.classRoomId as { academicYear?: string })?.academicYear ?? "Current Year"}</p>
+                                <p className="text-xs text-[--muted-foreground]">{(student?.classRoomId as { academicYear?: string })?.academicYear ?? t("studentPortal.dashboard.currentYear")}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -185,7 +187,7 @@ export default function StudentDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card className="col-span-1">
                         <CardHeader>
-                            <CardTitle className="text-base">Attendance Trend</CardTitle>
+                            <CardTitle className="text-base">{t("studentPortal.dashboard.attendanceTrend")}</CardTitle>
                         </CardHeader>
                         <CardContent className="h-[300px]">
                             {attendanceChartData.length > 0 ? (
@@ -210,7 +212,7 @@ export default function StudentDashboard() {
                                 </ResponsiveContainer>
                             ) : (
                                 <div className="h-full flex items-center justify-center text-[--muted-foreground] text-sm">
-                                    No attendance data available
+                                    {t("studentPortal.dashboard.noAttendanceData")}
                                 </div>
                             )}
                         </CardContent>
@@ -219,7 +221,7 @@ export default function StudentDashboard() {
                     {/* Fees Summary or Other Chart can go here - placeholder for now */}
                     <Card className="col-span-1">
                         <CardHeader>
-                            <CardTitle className="text-base">Recent Activities</CardTitle>
+                            <CardTitle className="text-base">{t("studentPortal.dashboard.recentActivities")}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
@@ -236,7 +238,7 @@ export default function StudentDashboard() {
                                     </div>
                                 ))}
                                 {exams.length === 0 && (
-                                    <div className="text-center py-4 text-sm text-[--muted-foreground]">No recent activities</div>
+                                    <div className="text-center py-4 text-sm text-[--muted-foreground]">{t("studentPortal.dashboard.noRecentActivities")}</div>
                                 )}
                             </div>
                         </CardContent>

@@ -1,15 +1,16 @@
 "use client";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { useExamMarks } from "@/hooks/useExamMarks";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/datatable/DataTable";
 import { ColumnDef } from "@tanstack/react-table";
 import { ExamMark } from "@/types/viewModels";
 
 export default function StudentExamMarksPage() {
+    const { t } = useTranslation();
     const { referenceId } = useAuth();
     const { marks, loading, fetchStudentExamResults } = useExamMarks();
 
@@ -20,18 +21,18 @@ export default function StudentExamMarksPage() {
 
     const columns: ColumnDef<ExamMark, unknown>[] = [
         {
-            id: "exam", header: "Exam",
+            id: "exam", header: t("studentPortal.examMarks.exam"),
             accessorFn: (r) => (r.examId as { name?: string })?.name ?? "—"
         },
         {
-            id: "subject", header: "Subject",
+            id: "subject", header: t("studentPortal.examMarks.subject"),
             accessorFn: (r) => {
                 const exam = r.examId as any;
                 return exam?.courseId?.name ?? "—";
             }
         },
         {
-            id: "marks", header: "Marks",
+            id: "marks", header: t("studentPortal.examMarks.marks"),
             cell: ({ row: { original: r } }) => {
                 const total = (r.examId as any)?.totalMarks ?? 100;
                 const percentage = Math.round((r.marksObtained / total) * 100);
@@ -44,23 +45,23 @@ export default function StudentExamMarksPage() {
             }
         },
         {
-            id: "grade", header: "Grade", accessorKey: "grade",
+            id: "grade", header: t("studentPortal.examMarks.grade"), accessorKey: "grade",
             cell: ({ getValue }) => {
                 const grade = String(getValue() || "—");
                 return <Badge variant={grade === "F" ? "destructive" : "outline"}>{grade}</Badge>;
             }
         },
-        { id: "remarks", header: "Remarks", accessorKey: "remarks" },
+        { id: "remarks", header: t("studentPortal.examMarks.remarks"), accessorKey: "remarks" },
     ];
 
     return (
         <>
-            <Header title="Exam Results" />
+            <Header title={t("studentPortal.examMarks.examResults")} />
             <main className="p-5 space-y-6">
                 {loading ? (
-                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">Loading…</div>
+                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">{t("studentPortal.examMarks.loading")}</div>
                 ) : (
-                    <DataTable data={marks} columns={columns} title="Marks" exportFilename="my-marks" />
+                    <DataTable data={marks} columns={columns} title={t("studentPortal.examMarks.marksTitle")} exportFilename="my-marks" />
                 )}
             </main>
         </>

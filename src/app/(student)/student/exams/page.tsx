@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudents } from "@/hooks/useStudents";
@@ -10,6 +11,7 @@ import { formatDate } from "@/lib/utils";
 import { Calendar, Clock } from "lucide-react";
 
 export default function StudentExamsPage() {
+    const { t } = useTranslation();
     const { referenceId } = useAuth();
     const { student, fetchStudent } = useStudents({}, false);
     const { exams, loading, fetchExamsByClassRooms } = useExams({}, false);
@@ -32,10 +34,10 @@ export default function StudentExamsPage() {
 
     return (
         <>
-            <Header title="Exam Schedule" />
+            <Header title={t("studentPortal.exams.examSchedule")} />
             <main className="p-5 space-y-6">
                 {loading ? (
-                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">Loading…</div>
+                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">{t("studentPortal.exams.loading")}</div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {exams.length > 0 ? exams.map((exam) => (
@@ -48,7 +50,7 @@ export default function StudentExamsPage() {
                                         </Badge>
                                     </div>
                                     <p className="text-sm text-[--muted-foreground] uppercase tracking-wide text-xs font-semibold">
-                                        {(exam.courseId as { name?: string })?.name ?? "Course"}
+                                        {(exam.courseId as { name?: string })?.name ?? t("studentPortal.exams.course")}
                                     </p>
                                 </CardHeader>
                                 <CardContent className="space-y-4 pt-2">
@@ -61,14 +63,14 @@ export default function StudentExamsPage() {
                                         <span>{exam.startTime} - {exam.endTime}</span>
                                     </div>
                                     <div className="pt-2 border-t border-[--border] mt-2 flex justify-between text-sm">
-                                        <span>Total Marks:</span>
+                                        <span>{t("studentPortal.exams.totalMarks")}</span>
                                         <span className="font-semibold">{exam.totalMarks}</span>
                                     </div>
                                 </CardContent>
                             </Card>
                         )) : (
                             <div className="col-span-full py-10 text-center text-[--muted-foreground]">
-                                No exams scheduled yet.
+                                {t("studentPortal.exams.noExams")}
                             </div>
                         )}
                     </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudents } from "@/hooks/useStudents";
@@ -11,6 +12,7 @@ import { Routine } from "@/types/viewModels";
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 export default function StudentRoutinesPage() {
+    const { t } = useTranslation();
     const { referenceId } = useAuth();
     const { student, fetchStudent } = useStudents({}, false);
     const { routines, loading, fetchRoutinesByClassRoom } = useRoutines({}, false);
@@ -44,10 +46,10 @@ export default function StudentRoutinesPage() {
 
     return (
         <>
-            <Header title="My Routine" />
+            <Header title={t("studentPortal.routines.myRoutine")} />
             <main className="p-5 space-y-6">
                 {loading && routines.length === 0 ? (
-                    <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading routines…</div>
+                    <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("studentPortal.routines.loading")}</div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {DAYS.map(day => {
@@ -57,7 +59,7 @@ export default function StudentRoutinesPage() {
                             return (
                                 <div key={day} className="space-y-3">
                                     <h3 className="capitalize font-semibold text-[--foreground] border-b border-[--border] pb-2">
-                                        {day}
+                                        {t(`routines.${day}`)}
                                     </h3>
                                     {dayRoutines.map(routine => (
                                         <Card key={routine._id} className="overflow-hidden">
@@ -72,7 +74,7 @@ export default function StudentRoutinesPage() {
 
                                                 <div className="flex items-center gap-2 text-xs text-[--muted-foreground]">
                                                     <MapPin size={12} className="shrink-0" />
-                                                    <span>Room {routine.roomNumber}</span>
+                                                    <span>{t("studentPortal.routines.room", { number: routine.roomNumber })}</span>
                                                 </div>
 
                                                 <div className="flex items-center gap-2 text-xs text-[--muted-foreground]">
@@ -80,7 +82,7 @@ export default function StudentRoutinesPage() {
                                                     <span>
                                                         {(routine.teacherId as { firstName?: string })?.firstName
                                                             ? `${(routine.teacherId as any).firstName} ${(routine.teacherId as any).lastName}`
-                                                            : "Teacher"}
+                                                            : t("studentPortal.routines.teacher")}
                                                     </span>
                                                 </div>
                                             </CardContent>
@@ -91,7 +93,7 @@ export default function StudentRoutinesPage() {
                         })}
                         {Object.keys(groupedRoutines).length === 0 && !loading && (
                             <div className="col-span-full py-10 text-center text-[--muted-foreground]">
-                                No routines scheduled yet.
+                                {t("studentPortal.routines.noRoutines")}
                             </div>
                         )}
                     </div>
