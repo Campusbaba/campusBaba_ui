@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormCombobox } from "@/components/reusable/FormCombobox";
+import { useTranslation } from "react-i18next";
 import { useTeacherNotices } from "@/hooks/useNotices";
 import { useAuth } from "@/hooks/useAuth";
 import { Notice } from "@/types/viewModels";
@@ -61,6 +62,7 @@ const targetAudienceOptions = [
 ];
 
 export default function TeacherNoticesPage() {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { notices, loading, pagination, createNotice, updateNotice, deleteNotice } =
         useTeacherNotices(user?.referenceId);
@@ -122,10 +124,10 @@ export default function TeacherNoticesPage() {
                     modifiedBy: user?.referenceId,
                     modifiedByModel: "Teacher",
                 });
-                toast.success("Notice updated");
+                toast.success(t("teacherPortal.notices.noticeUpdated"));
             } else {
                 await createNotice(payload);
-                toast.success("Notice published");
+                toast.success(t("teacherPortal.notices.noticePublished"));
             }
             setOpen(false);
         } catch (err: any) {
@@ -142,19 +144,19 @@ export default function TeacherNoticesPage() {
         setBusy(true);
         try {
             await deleteNotice(confirm._id);
-            toast.success("Notice deleted");
+            toast.success(t("teacherPortal.notices.noticeDeleted"));
             setConfirm(null);
         } catch {
-            toast.error("Failed to delete");
+            toast.error(t("teacherPortal.notices.failedToDelete"));
         } finally {
             setBusy(false);
         }
     }
 
     const columns: ColumnDef<Notice, unknown>[] = [
-        { id: "title", accessorKey: "title", header: "Title" },
+        { id: "title", accessorKey: "title", header: t("teacherPortal.notices.titleHeader") },
         {
-            id: "content", accessorKey: "content", header: "Content",
+            id: "content", accessorKey: "content", header: t("teacherPortal.notices.contentHeader"),
             cell: ({ getValue }) => (
                 <textarea
                     readOnly
@@ -164,15 +166,15 @@ export default function TeacherNoticesPage() {
                 />
             ),
         },
-        { id: "category", accessorKey: "category", header: "Category" },
+        { id: "category", accessorKey: "category", header: t("teacherPortal.notices.categoryHeader") },
         {
-            id: "targetAudience", header: "Audience",
+            id: "targetAudience", header: t("teacherPortal.notices.audienceHeader"),
             accessorFn: r => Array.isArray(r.targetAudience)
                 ? r.targetAudience.join(", ")
                 : String(r.targetAudience),
         },
         {
-            id: "priority", header: "Priority", accessorKey: "priority",
+            id: "priority", header: t("teacherPortal.notices.priorityHeader"), accessorKey: "priority",
             cell: ({ getValue }) => (
                 <Badge variant={String(getValue()) === "high" ? "destructive" : "default"}>
                     {String(getValue())}
@@ -180,15 +182,15 @@ export default function TeacherNoticesPage() {
             ),
         },
         {
-            id: "publishDate", header: "Published",
+            id: "publishDate", header: t("teacherPortal.notices.publishedHeader"),
             accessorFn: r => r.publishDate ? formatDate(r.publishDate) : "—",
         },
         {
-            id: "expiryDate", header: "Expires",
+            id: "expiryDate", header: t("teacherPortal.notices.expiresHeader"),
             accessorFn: r => r.expiryDate ? formatDate(r.expiryDate) : "—",
         },
         {
-            id: "createdBy", header: "Created By",
+            id: "createdBy", header: t("teacherPortal.notices.createdByHeader"),
             accessorFn: r => {
                 const cb = r.createdBy;
                 if (typeof cb === "object" && cb !== null)
@@ -197,7 +199,7 @@ export default function TeacherNoticesPage() {
             },
         },
         {
-            id: "modifiedBy", header: "Modified By",
+            id: "modifiedBy", header: t("teacherPortal.notices.modifiedByHeader"),
             accessorFn: r => {
                 if (!r.modifiedBy) return "—";
                 if (typeof r.modifiedBy === "object")
@@ -206,7 +208,7 @@ export default function TeacherNoticesPage() {
             },
         },
         {
-            id: "status", header: "Status", accessorKey: "status",
+            id: "status", header: t("teacherPortal.notices.statusHeader"), accessorKey: "status",
             cell: ({ getValue }) => (
                 <Badge variant={String(getValue()) === "published" ? "default" : "secondary"}>
                     {String(getValue())}
@@ -234,65 +236,65 @@ export default function TeacherNoticesPage() {
 
     return (
         <>
-            <Header title="My Notices" />
+            <Header title={t("teacherPortal.notices.title")} />
             <main className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-base font-semibold">My Notices</h2>
+                        <h2 className="text-base font-semibold">{t("teacherPortal.notices.title")}</h2>
                         <p className="text-sm text-[--muted-foreground]">
-                            {pagination?.totalItems ?? notices.length} total
+                            {t("teacherPortal.notices.total", { count: pagination?.totalItems ?? notices.length })}
                         </p>
                     </div>
                     <Button onClick={openAdd}>
                         <Plus size={15} className="mr-1" />
-                        Post Notice
+                        {t("teacherPortal.notices.postNotice")}
                     </Button>
                 </div>
 
                 {loading
-                    ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                    : <DataTable data={notices} columns={columns} title="Notices" exportFilename="teacher-notices" />
+                    ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("teacherPortal.notices.loading")}</div>
+                    : <DataTable data={notices} columns={columns} title={t("teacherPortal.notices.notices")} exportFilename="teacher-notices" />
                 }
             </main>
 
             <FormDialog
                 open={open}
                 onClose={() => setOpen(false)}
-                title={editing ? "Edit Notice" : "Post Notice"}
+                title={editing ? t("teacherPortal.notices.editNotice") : t("teacherPortal.notices.postNotice")}
             >
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div className="col-span-2">
-                            <Label>Title *</Label>
+                            <Label>{t("teacherPortal.notices.titleLabel")}</Label>
                             <Input value={form.title} onChange={e => f("title", e.target.value)} required />
                         </div>
 
                         <div>
-                            <Label>Category</Label>
+                            <Label>{t("teacherPortal.notices.category")}</Label>
                             <FormCombobox
                                 items={categoryOptions}
                                 value={form.category}
                                 onValueChange={v => f("category", v)}
-                                placeholder="Select category"
+                                placeholder={t("teacherPortal.notices.selectCategory")}
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
                             />
                         </div>
 
                         <div>
-                            <Label>Priority</Label>
+                            <Label>{t("teacherPortal.notices.priority")}</Label>
                             <FormCombobox
                                 items={priorityOptions}
                                 value={form.priority}
                                 onValueChange={v => f("priority", v)}
-                                placeholder="Select priority"
+                                placeholder={t("teacherPortal.notices.selectPriority")}
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
                             />
                         </div>
 
                         <div className="col-span-2">
-                            <Label>Target Audience *</Label>
+                            <Label>{t("teacherPortal.notices.targetAudience")}</Label>
                             <div className="flex flex-wrap gap-4 mt-2">
                                 {targetAudienceOptions.map(opt => (
                                     <div key={opt.value} className="flex items-center space-x-2">
@@ -319,19 +321,19 @@ export default function TeacherNoticesPage() {
                         </div>
 
                         <div>
-                            <Label>Status</Label>
+                            <Label>{t("teacherPortal.notices.statusLabel")}</Label>
                             <FormCombobox
                                 items={statusOptions}
                                 value={form.status}
                                 onValueChange={v => f("status", v)}
-                                placeholder="Select status"
+                                placeholder={t("teacherPortal.notices.selectStatus")}
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
                             />
                         </div>
 
                         <div>
-                            <Label>Publish Date</Label>
+                            <Label>{t("teacherPortal.notices.publishDate")}</Label>
                             <Input
                                 type="date"
                                 value={form.publishDate}
@@ -340,7 +342,7 @@ export default function TeacherNoticesPage() {
                         </div>
 
                         <div>
-                            <Label>Expiry Date</Label>
+                            <Label>{t("teacherPortal.notices.expiryDate")}</Label>
                             <Input
                                 type="date"
                                 value={form.expiryDate}
@@ -349,7 +351,7 @@ export default function TeacherNoticesPage() {
                         </div>
 
                         <div className="col-span-2">
-                            <Label>Content *</Label>
+                            <Label>{t("teacherPortal.notices.contentLabel")}</Label>
                             <textarea
                                 className="flex min-h-24 w-full rounded border border-[--border] bg-[--card] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--ring]"
                                 value={form.content}
@@ -361,10 +363,10 @@ export default function TeacherNoticesPage() {
 
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>
-                            Cancel
+                            {t("teacherPortal.notices.cancel")}
                         </Button>
                         <Button size="sm" type="submit" disabled={busy}>
-                            {busy ? "Saving…" : editing ? "Update" : "Publish"}
+                            {busy ? t("teacherPortal.notices.saving") : editing ? t("teacherPortal.notices.update") : t("teacherPortal.notices.publish")}
                         </Button>
                     </div>
                 </form>
@@ -375,7 +377,7 @@ export default function TeacherNoticesPage() {
                 onClose={() => setConfirm(null)}
                 onConfirm={handleDelete}
                 loading={busy}
-                message={`Delete notice "${confirm?.title}"? This cannot be undone.`}
+                message={t("teacherPortal.notices.deleteConfirm", { title: confirm?.title })}
             />
         </>
     );

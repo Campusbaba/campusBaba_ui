@@ -16,6 +16,7 @@ import { ClassRoom, Student } from "@/types/viewModels";
 import { toast } from "@/lib/toast";
 import { Save, CheckCircle2, XCircle, Loader2, ClipboardList } from "lucide-react";
 import api from "@/lib/axios";
+import { useTranslation } from "react-i18next";
 
 type MarkRow = {
     marksObtained: string;
@@ -47,6 +48,7 @@ const statusOptions: { value: MarkRow["status"]; label: string }[] = [
 ];
 
 export default function TeacherExamMarksPage() {
+    const { t } = useTranslation();
     const { referenceId } = useAuth();
     const { classRooms } = useClassRooms({}, true, referenceId);
     const { exams, fetchExamsByClassRooms } = useExams({}, false);
@@ -85,7 +87,7 @@ export default function TeacherExamMarksPage() {
             setStudents(res.data.data ?? []);
         } catch {
             setStudents([]);
-            toast.error("Failed to load students");
+            toast.error(t("teacherPortal.examMarks.failedToLoadStudents"));
         } finally {
             setStudentsLoading(false);
         }
@@ -172,7 +174,7 @@ export default function TeacherExamMarksPage() {
 
     const columns = useMemo<ColumnDef<StudentMarkRow, unknown>[]>(() => [
         {
-            id: "studentId", accessorKey: "studentId", header: "Student ID",
+            id: "studentId", accessorKey: "studentId", header: t("teacherPortal.examMarks.studentIdHeader"),
             cell: ({ getValue }) => (
                 <span className="font-mono text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">
                     {String(getValue() ?? "—")}
@@ -180,7 +182,7 @@ export default function TeacherExamMarksPage() {
             ),
         },
         {
-            id: "name", header: "Name", accessorFn: r => `${r.firstName} ${r.lastName}`,
+            id: "name", header: t("teacherPortal.examMarks.nameHeader"), accessorFn: r => `${r.firstName} ${r.lastName}`,
             cell: ({ row: { original: r } }) => (
                 <div>
                     <p className="font-medium text-xs">{r.firstName} {r.lastName}</p>
@@ -189,7 +191,7 @@ export default function TeacherExamMarksPage() {
             ),
         },
         {
-            id: "marksObtained", header: "Marks", accessorFn: r => isNaN(r.marksNum) ? -1 : r.marksNum,
+            id: "marksObtained", header: t("teacherPortal.examMarks.marksHeader"), accessorFn: r => isNaN(r.marksNum) ? -1 : r.marksNum,
             sortingFn: "basic",
             cell: ({ row: { original: r } }) => (
                 <Input
@@ -204,24 +206,24 @@ export default function TeacherExamMarksPage() {
             ),
         },
         {
-            id: "remarks", accessorKey: "remarks", header: "Remarks",
+            id: "remarks", accessorKey: "remarks", header: t("teacherPortal.examMarks.remarksHeader"),
             cell: ({ row: { original: r } }) => (
                 <Input
                     value={r.remarks}
                     onChange={e => updateRow(r._id, "remarks", e.target.value)}
-                    placeholder="Optional…"
+                    placeholder={t("teacherPortal.examMarks.remarksPlaceholder")}
                     className="h-8 text-xs w-36"
                 />
             ),
         },
         {
-            id: "status", accessorKey: "status", header: "Status",
+            id: "status", accessorKey: "status", header: t("teacherPortal.examMarks.statusHeader"),
             cell: ({ row: { original: r } }) => (
                 <FormCombobox
                     items={statusOptions}
                     value={r.status}
                     onValueChange={v => updateRow(r._id, "status", v)}
-                    placeholder="Select status"
+                    placeholder={t("teacherPortal.examMarks.selectStatus")}
                     renderItem={opt => opt.label}
                     getItemValue={opt => opt.value}
                     getItemLabel={opt => opt.label}
@@ -229,26 +231,26 @@ export default function TeacherExamMarksPage() {
             ),
         },
         {
-            id: "result", accessorKey: "result", header: "Result",
+            id: "result", accessorKey: "result", header: t("teacherPortal.examMarks.resultHeader"),
             cell: ({ row: { original: r } }) => (
                 <div className="flex items-center gap-1.5">
                     {r.result === "Pass" && (
                         <span className="flex items-center gap-1 text-emerald-600 text-xs font-medium">
-                            <CheckCircle2 size={13} />Pass
+                            <CheckCircle2 size={13} />{t("teacherPortal.examMarks.passResult")}
                         </span>
                     )}
                     {r.result === "Fail" && (
                         <span className="flex items-center gap-1 text-rose-600 text-xs font-medium">
-                            <XCircle size={13} />Fail
+                            <XCircle size={13} />{t("teacherPortal.examMarks.failResult")}
                         </span>
                     )}
                     {r.result === "" && <span className="text-[--muted-foreground] text-xs">—</span>}
                     {r.result === "Invalid" && (
                         <span className="flex items-center gap-1 text-amber-600 text-xs font-medium">
-                            <XCircle size={13} />Invalid
+                            <XCircle size={13} />{t("teacherPortal.examMarks.invalidResult")}
                         </span>
                     )}
-                    {r.saved && <Badge variant="secondary" className="text-[10px] px-1 py-0">saved</Badge>}
+                    {r.saved && <Badge variant="secondary" className="text-[10px] px-1 py-0">{t("teacherPortal.examMarks.savedBadge")}</Badge>}
                 </div>
             ),
         },
@@ -261,7 +263,7 @@ export default function TeacherExamMarksPage() {
             const row = rows[s._id];
             return row && row.marksObtained !== "";
         });
-        if (toSave.length === 0) { toast.error("No marks entered"); return; }
+        if (toSave.length === 0) { toast.error(t("teacherPortal.examMarks.noMarksEntered")); return; }
         setSaving(true);
         let successCount = 0;
         let failCount = 0;
@@ -270,7 +272,7 @@ export default function TeacherExamMarksPage() {
             const obtained = Number(row.marksObtained);
             if (isNaN(obtained) || obtained < 0) { failCount++; continue; }
             const total = selectedExam?.totalMarks ?? 100;
-            if (obtained > total) { toast.error(`${s.firstName}'s marks exceed total (${total})`); failCount++; continue; }
+            if (obtained > total) { toast.error(t("teacherPortal.examMarks.marksExceedTotal", { name: s.firstName, total })); failCount++; continue; }
             const payload = {
                 examId: selectedExamId,
                 studentId: s._id,
@@ -295,8 +297,8 @@ export default function TeacherExamMarksPage() {
             }
         }
         setSaving(false);
-        if (successCount > 0) toast.success(`${successCount} mark(s) saved`);
-        if (failCount > 0) toast.error(`${failCount} mark(s) failed to save`);
+        if (successCount > 0) toast.success(t("teacherPortal.examMarks.marksSaved", { count: successCount }));
+        if (failCount > 0) toast.error(t("teacherPortal.examMarks.marksFailed", { count: failCount }));
         fetchMarks(selectedExamId);
     }
 
@@ -306,35 +308,35 @@ export default function TeacherExamMarksPage() {
 
     return (
         <>
-            <Header title="Exam Marks" />
+            <Header title={t("teacherPortal.examMarks.title")} />
             <main className="p-5 space-y-5">
                 {/* Selectors */}
                 <div className="card p-5 space-y-4">
-                    <h2 className="text-sm font-semibold text-[--foreground]">Select Class & Exam</h2>
+                    <h2 className="text-sm font-semibold text-[--foreground]">{t("teacherPortal.examMarks.selectClassExam")}</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <Label>Classroom</Label>
+                            <Label>{t("teacherPortal.examMarks.classroom")}</Label>
                             <FormCombobox
                                 items={classRooms}
                                 value={selectedClassId}
                                 onValueChange={setSelectedClassId}
-                                placeholder="Select a classroom…"
+                                placeholder={t("teacherPortal.examMarks.selectClassroom")}
                                 renderItem={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
                                 getItemValue={cr => cr._id}
                                 getItemLabel={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <Label>Exam</Label>
+                            <Label>{t("teacherPortal.examMarks.exam")}</Label>
                             <FormCombobox
                                 items={filteredExams}
                                 value={selectedExamId}
                                 onValueChange={setSelectedExamId}
                                 disabled={!selectedClassId || filteredExams.length === 0}
                                 placeholder={
-                                    !selectedClassId ? "Select a classroom first…" :
-                                        filteredExams.length === 0 ? "No exams for this class" :
-                                            "Select an exam…"
+                                    !selectedClassId ? t("teacherPortal.examMarks.selectClassroomFirst") :
+                                        filteredExams.length === 0 ? t("teacherPortal.examMarks.noExamsForClass") :
+                                            t("teacherPortal.examMarks.selectExam")
                                 }
                                 renderItem={ex => `${ex.name} — ${ex.examType} (${ex.totalMarks} marks)`}
                                 getItemValue={ex => ex._id}
@@ -347,19 +349,19 @@ export default function TeacherExamMarksPage() {
                     {selectedExam && (
                         <div className="flex flex-wrap gap-3 pt-1">
                             <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                Total Marks: <strong>{selectedExam.totalMarks}</strong>
+                                {t("teacherPortal.examMarks.totalMarks")} <strong>{selectedExam.totalMarks}</strong>
                             </span>
                             <span className="text-xs bg-rose-50 text-rose-700 px-2 py-1 rounded">
-                                Passing Marks: <strong>{selectedExam.passingMarks}</strong>
+                                {t("teacherPortal.examMarks.passingMarks")} <strong>{selectedExam.passingMarks}</strong>
                             </span>
                             <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded">
-                                Pass: <strong>{passCount}</strong>
+                                {t("teacherPortal.examMarks.passCount")} <strong>{passCount}</strong>
                             </span>
                             <span className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded">
-                                Fail: <strong>{failCount}</strong>
+                                {t("teacherPortal.examMarks.failCount")} <strong>{failCount}</strong>
                             </span>
                             <span className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded">
-                                Pending: <strong>{pendingCount}</strong>
+                                {t("teacherPortal.examMarks.pendingCount")} <strong>{pendingCount}</strong>
                             </span>
                         </div>
                     )}
@@ -370,15 +372,15 @@ export default function TeacherExamMarksPage() {
                     studentsLoading || marksLoading ? (
                         <div className="card p-10 text-center text-sm text-[--muted-foreground]">
                             <Loader2 size={20} className="animate-spin mx-auto mb-2" />
-                            Loading…
+                            {t("teacherPortal.examMarks.loading")}
                         </div>
                     ) : (
                         <div className="space-y-3">
                             <div className="flex justify-end">
                                 <Button size="sm" onClick={handleSaveAll} disabled={saving}>
                                     {saving
-                                        ? <><Loader2 size={14} className="mr-1.5 animate-spin" />Saving…</>
-                                        : <><Save size={14} className="mr-1.5" />Save All</>}
+                                        ? <><Loader2 size={14} className="mr-1.5 animate-spin" />{t("teacherPortal.examMarks.saving")}</>
+                                        : <><Save size={14} className="mr-1.5" />{t("teacherPortal.examMarks.saveAll")}</>}
                                 </Button>
                             </div>
                             <DataTable
@@ -396,7 +398,7 @@ export default function TeacherExamMarksPage() {
                     <div className="card p-12">
                         <div className="text-center text-[--muted-foreground]">
                             <ClipboardList size={36} className="mx-auto mb-3 opacity-30" />
-                            <p className="text-sm">Select a classroom and exam to manage marks.</p>
+                            <p className="text-sm">{t("teacherPortal.examMarks.selectClassAndExam")}</p>
                         </div>
                     </div>
                 )}

@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { useRoutines } from "@/hooks/useRoutines";
 import { useAuth } from "@/hooks/useAuth";
 import { Routine } from "@/types/viewModels";
+import { useTranslation } from "react-i18next";
 
 export default function TeacherRoutinesPage() {
+    const { t } = useTranslation();
     const { referenceId } = useAuth();
     const { fetchRoutinesByTeacher } = useRoutines();
     const [routines, setRoutines] = useState<Routine[]>([]);
@@ -25,25 +27,25 @@ export default function TeacherRoutinesPage() {
     }, [referenceId, fetchRoutinesByTeacher]);
 
     const columns: ColumnDef<Routine, unknown>[] = [
-        { id: "subject", accessorKey: "subject", header: "Subject" },
-        { id: "class", header: "Class", accessorFn: (r) => (r.classRoomId as { name?: string })?.name ?? String(r.classRoomId) },
-        { id: "dayOfWeek", accessorKey: "dayOfWeek", header: "Day" },
-        { id: "startTime", accessorKey: "startTime", header: "Start" },
-        { id: "endTime", accessorKey: "endTime", header: "End" },
-        { id: "roomNumber", accessorKey: "roomNumber", header: "Room" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
+        { id: "subject", accessorKey: "subject", header: t("teacherPortal.routines.subjectHeader") },
+        { id: "class", header: t("teacherPortal.routines.classHeader"), accessorFn: (r) => (r.classRoomId as { name?: string })?.name ?? String(r.classRoomId) },
+        { id: "dayOfWeek", accessorKey: "dayOfWeek", header: t("teacherPortal.routines.dayHeader") },
+        { id: "startTime", accessorKey: "startTime", header: t("teacherPortal.routines.startHeader") },
+        { id: "endTime", accessorKey: "endTime", header: t("teacherPortal.routines.endHeader") },
+        { id: "roomNumber", accessorKey: "roomNumber", header: t("teacherPortal.routines.roomHeader") },
+        { id: "status", header: t("teacherPortal.routines.statusHeader"), accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
     ];
 
     return (
         <>
-            <Header title="My Routines" />
+            <Header title={t("teacherPortal.routines.title")} />
             <main className="p-5 space-y-4">
-                <h2 className="text-base font-semibold text-[--foreground]">My Class Routines</h2>
+                <h2 className="text-base font-semibold text-[--foreground]">{t("teacherPortal.routines.myClassRoutines")}</h2>
                 {error && (
                     <div className="card p-4 text-sm text-red-500">{error}</div>
                 )}
                 {loading ? (
-                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">Loading…</div>
+                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">{t("teacherPortal.routines.loading")}</div>
                 ) : (
                     <DataTable data={routines} columns={columns} title="My Routines" exportFilename="teacher-routines" />
                 )}

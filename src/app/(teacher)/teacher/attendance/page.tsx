@@ -178,7 +178,7 @@ export default function TeacherAttendancePage() {
 
     return (
         <>
-            <Header title="Attendance" />
+            <Header title={t("attendance.title")} />
             <main className="p-5 space-y-4">
                 {/* Tabs */}
                 <div className="flex gap-2 border-b pb-3">

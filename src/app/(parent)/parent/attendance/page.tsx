@@ -10,8 +10,10 @@ import { useParents } from "@/hooks/useParents";
 import { useAuth } from "@/hooks/useAuth";
 import { Attendance } from "@/types/viewModels";
 import { formatDate } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export default function ParentAttendancePage() {
+    const { t } = useTranslation();
     const { referenceId } = useAuth();
     const { children, fetchChildren } = useParents({}, false);
     const { attendances, loading, fetchAttendances } = useAttendance({}, false);
@@ -30,24 +32,24 @@ export default function ParentAttendancePage() {
     }, [selectedStudentId, fetchAttendances]);
 
     const columns: ColumnDef<Attendance, unknown>[] = [
-        { id: "student", header: "Student", accessorFn: (r) => { const s = r.studentId as { firstName?: string; lastName?: string }; return s?.firstName ? `${s.firstName} ${s.lastName ?? ""}`.trim() : String(r.studentId); } },
-        { id: "class", header: "Class", accessorFn: (r) => (r.classRoomId as { name?: string })?.name ?? String(r.classRoomId) },
-        { id: "date", header: "Date", accessorFn: (r) => formatDate(r.date) },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "present" ? "default" : "destructive"}>{String(getValue())}</Badge> },
-        { id: "remarks", accessorKey: "remarks", header: "Remarks" },
+        { id: "student", header: t("parentPortal.attendance.studentHeader"), accessorFn: (r) => { const s = r.studentId as { firstName?: string; lastName?: string }; return s?.firstName ? `${s.firstName} ${s.lastName ?? ""}`.trim() : String(r.studentId); } },
+        { id: "class", header: t("parentPortal.attendance.classHeader"), accessorFn: (r) => (r.classRoomId as { name?: string })?.name ?? String(r.classRoomId) },
+        { id: "date", header: t("parentPortal.attendance.dateHeader"), accessorFn: (r) => formatDate(r.date) },
+        { id: "status", header: t("parentPortal.attendance.statusHeader"), accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "present" ? "default" : "destructive"}>{String(getValue())}</Badge> },
+        { id: "remarks", accessorKey: "remarks", header: t("parentPortal.attendance.remarksHeader") },
     ];
 
     const selectedStudent = children.find((c) => c._id === selectedStudentId);
 
     return (
         <>
-            <Header title="Child Attendance" />
+            <Header title={t("parentPortal.attendance.title")} />
             <main className="p-5 space-y-4">
                 {children.length > 1 && (
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-[--muted-foreground]">Child:</span>
+                        <span className="text-sm text-[--muted-foreground]">{t("parentPortal.attendance.child")}</span>
                         <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                            <SelectTrigger className="w-52"><SelectValue placeholder="Select child" /></SelectTrigger>
+                            <SelectTrigger className="w-52"><SelectValue placeholder={t("parentPortal.attendance.selectChild")} /></SelectTrigger>
                             <SelectContent>
                                 {children.map((c) => (
                                     <SelectItem key={c._id} value={c._id}>{c.firstName} {c.lastName}</SelectItem>
@@ -57,10 +59,10 @@ export default function ParentAttendancePage() {
                     </div>
                 )}
                 <h2 className="text-base font-semibold text-[--foreground]">
-                    Attendance Records{selectedStudent ? ` — ${selectedStudent.firstName} ${selectedStudent.lastName}` : ""}
+                    {t("parentPortal.attendance.attendanceRecords")}{selectedStudent ? ` — ${selectedStudent.firstName} ${selectedStudent.lastName}` : ""}
                 </h2>
                 {loading ? (
-                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">Loading…</div>
+                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">{t("parentPortal.attendance.loading")}</div>
                 ) : (
                     <DataTable data={attendances} columns={columns} title="Attendance" exportFilename="parent-attendance" />
                 )}

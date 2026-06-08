@@ -10,8 +10,10 @@ import { useParents } from "@/hooks/useParents";
 import { useAuth } from "@/hooks/useAuth";
 import { Payment } from "@/types/viewModels";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export default function ParentPaymentsPage() {
+    const { t } = useTranslation();
     const { referenceId } = useAuth();
     const { children, fetchChildren } = useParents({}, false);
     const { payments, loading, fetchStudentPayments } = usePayments({}, false);
@@ -30,27 +32,27 @@ export default function ParentPaymentsPage() {
     }, [selectedStudentId, fetchStudentPayments]);
 
     const columns: ColumnDef<Payment, unknown>[] = [
-        { id: "paymentType", accessorKey: "paymentType", header: "Type" },
-        { id: "amount", header: "Amount", accessorFn: (r) => formatCurrency(r.amount) },
-        { id: "paymentMethod", accessorKey: "paymentMethod", header: "Method" },
-        { id: "dueDate", header: "Due Date", accessorFn: (r) => formatDate(r.dueDate) },
-        { id: "paidDate", header: "Paid Date", accessorFn: (r) => r.paidDate ? formatDate(r.paidDate) : "—" },
-        { id: "academicYear", accessorKey: "academicYear", header: "Academic Year" },
-        { id: "semester", accessorKey: "semester", header: "Semester" },
-        { id: "status", header: "Status", accessorKey: "paymentStatus", cell: ({ getValue }) => <Badge variant={String(getValue()) === "paid" ? "default" : "secondary"}>{String(getValue())}</Badge> },
+        { id: "paymentType", accessorKey: "paymentType", header: t("parentPortal.payments.typeHeader") },
+        { id: "amount", header: t("parentPortal.payments.amountHeader"), accessorFn: (r) => formatCurrency(r.amount) },
+        { id: "paymentMethod", accessorKey: "paymentMethod", header: t("parentPortal.payments.methodHeader") },
+        { id: "dueDate", header: t("parentPortal.payments.dueDateHeader"), accessorFn: (r) => formatDate(r.dueDate) },
+        { id: "paidDate", header: t("parentPortal.payments.paidDateHeader"), accessorFn: (r) => r.paidDate ? formatDate(r.paidDate) : "—" },
+        { id: "academicYear", accessorKey: "academicYear", header: t("parentPortal.payments.academicYearHeader") },
+        { id: "semester", accessorKey: "semester", header: t("parentPortal.payments.semesterHeader") },
+        { id: "status", header: t("parentPortal.payments.statusHeader"), accessorKey: "paymentStatus", cell: ({ getValue }) => <Badge variant={String(getValue()) === "paid" ? "default" : "secondary"}>{String(getValue())}</Badge> },
     ];
 
     const selectedStudent = children.find((c) => c._id === selectedStudentId);
 
     return (
         <>
-            <Header title="Payments" />
+            <Header title={t("parentPortal.payments.title")} />
             <main className="p-5 space-y-4">
                 {children.length > 1 && (
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-[--muted-foreground]">Child:</span>
+                        <span className="text-sm text-[--muted-foreground]">{t("parentPortal.payments.child")}</span>
                         <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                            <SelectTrigger className="w-52"><SelectValue placeholder="Select child" /></SelectTrigger>
+                            <SelectTrigger className="w-52"><SelectValue placeholder={t("parentPortal.payments.selectChild")} /></SelectTrigger>
                             <SelectContent>
                                 {children.map((c) => (
                                     <SelectItem key={c._id} value={c._id}>{c.firstName} {c.lastName}</SelectItem>
@@ -60,10 +62,10 @@ export default function ParentPaymentsPage() {
                     </div>
                 )}
                 <h2 className="text-base font-semibold text-[--foreground]">
-                    Payment History{selectedStudent ? ` — ${selectedStudent.firstName} ${selectedStudent.lastName}` : ""}
+                    {t("parentPortal.payments.paymentHistory")}{selectedStudent ? ` — ${selectedStudent.firstName} ${selectedStudent.lastName}` : ""}
                 </h2>
                 {loading ? (
-                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">Loading…</div>
+                    <div className="card p-10 text-center text-[--muted-foreground] text-sm">{t("parentPortal.payments.loading")}</div>
                 ) : (
                     <DataTable data={payments} columns={columns} title="Payments" exportFilename="parent-payments" />
                 )}

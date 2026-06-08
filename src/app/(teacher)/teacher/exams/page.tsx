@@ -17,6 +17,7 @@ import { Exam, ClassRoom } from "@/types/viewModels";
 import { formatDate } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type TF = {
     examId: string;
@@ -61,6 +62,7 @@ const statusOptions = [
 ];
 
 export default function TeacherExamsPage() {
+    const { t } = useTranslation();
     const { referenceId } = useAuth();
     const { classRooms, loading: classRoomsLoading } = useClassRooms({}, true, referenceId);
     const { exams, loading, fetchExamsByClassRooms, createExam, updateExam, deleteExam } = useExams({}, false);
@@ -130,10 +132,10 @@ export default function TeacherExamsPage() {
             };
             if (editing) {
                 await updateExam(editing._id, payload);
-                toast.success("Exam updated");
+                toast.success(t("teacherPortal.exams.examUpdated"));
             } else {
                 await createExam(payload);
-                toast.success("Exam created");
+                toast.success(t("teacherPortal.exams.examCreated"));
             }
             setOpen(false);
             // Refresh exams
@@ -142,7 +144,7 @@ export default function TeacherExamsPage() {
                 fetchExamsByClassRooms(classRoomIds);
             }
         } catch {
-            toast.error("Failed to save exam");
+            toast.error(t("teacherPortal.exams.failedToSave"));
         } finally {
             setBusy(false);
         }
@@ -153,7 +155,7 @@ export default function TeacherExamsPage() {
         setBusy(true);
         try {
             await deleteExam(confirm._id);
-            toast.success("Exam deleted");
+            toast.success(t("teacherPortal.exams.examDeleted"));
             setConfirm(null);
             // Refresh exams
             if (classRooms.length > 0) {
@@ -161,39 +163,39 @@ export default function TeacherExamsPage() {
                 fetchExamsByClassRooms(classRoomIds);
             }
         } catch {
-            toast.error("Failed to delete exam");
+            toast.error(t("teacherPortal.exams.failedToDelete"));
         } finally {
             setBusy(false);
         }
     }
 
     const columns: ColumnDef<Exam, unknown>[] = [
-        { id: "examId", accessorKey: "examId", header: "Exam ID" },
-        { id: "name", accessorKey: "name", header: "Exam" },
-        { id: "examType", accessorKey: "examType", header: "Type" },
+        { id: "examId", accessorKey: "examId", header: t("teacherPortal.exams.examIdHeader") },
+        { id: "name", accessorKey: "name", header: t("teacherPortal.exams.examHeader") },
+        { id: "examType", accessorKey: "examType", header: t("teacherPortal.exams.typeHeader") },
         {
             id: "course",
-            header: "Course",
+            header: t("teacherPortal.exams.courseHeader"),
             accessorFn: (r) =>
                 (r.courseId as { name?: string })?.name ?? String(r.courseId),
         },
         {
             id: "class",
-            header: "Class",
+            header: t("teacherPortal.exams.classHeader"),
             accessorFn: (r) =>
                 (r.classRoomId as { name?: string })?.name ?? String(r.classRoomId),
         },
-        { id: "date", header: "Date", accessorFn: (r) => formatDate(r.date) },
+        { id: "date", header: t("teacherPortal.exams.dateHeader"), accessorFn: (r) => formatDate(r.date) },
         {
             id: "time",
-            header: "Time",
+            header: t("teacherPortal.exams.timeHeader"),
             accessorFn: (r) => `${r.startTime} - ${r.endTime}`,
         },
-        { id: "totalMarks", accessorKey: "totalMarks", header: "Total" },
-        { id: "passingMarks", accessorKey: "passingMarks", header: "Pass" },
+        { id: "totalMarks", accessorKey: "totalMarks", header: t("teacherPortal.exams.totalHeader") },
+        { id: "passingMarks", accessorKey: "passingMarks", header: t("teacherPortal.exams.passHeader") },
         {
             id: "status",
-            header: "Status",
+            header: t("teacherPortal.exams.statusHeader"),
             accessorKey: "status",
             cell: ({ getValue }) => {
                 const status = String(getValue());
@@ -229,27 +231,27 @@ export default function TeacherExamsPage() {
 
     return (
         <>
-            <Header title="Exams" />
+            <Header title={t("teacherPortal.exams.title")} />
             <main className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-base font-semibold text-[--foreground]">My Exams</h2>
+                        <h2 className="text-base font-semibold text-[--foreground]">{t("teacherPortal.exams.myExams")}</h2>
                         <p className="text-sm text-[--muted-foreground]">
-                            {exams.length} exam{exams.length !== 1 ? "s" : ""}
+                            {t("teacherPortal.exams.examCount", { count: exams.length })}
                         </p>
                     </div>
                     <Button onClick={openAdd}>
                         <Plus size={15} className="mr-1" />
-                        Add Exam
+                        {t("teacherPortal.exams.addExam")}
                     </Button>
                 </div>
                 {loading || classRoomsLoading ? (
                     <div className="card p-10 text-center text-[--muted-foreground] text-sm">
-                        Loading…
+                        {t("teacherPortal.exams.loading")}
                     </div>
                 ) : exams.length === 0 ? (
                     <div className="card p-10 text-center text-[--muted-foreground] text-sm">
-                        No exams assigned to your classrooms
+                        {t("teacherPortal.exams.noExams")}
                     </div>
                 ) : (
                     <DataTable
@@ -265,38 +267,38 @@ export default function TeacherExamsPage() {
             <FormDialog
                 open={open}
                 onClose={() => setOpen(false)}
-                title={editing ? "Edit Exam" : "Create Exam"}
+                title={editing ? t("teacherPortal.exams.editExam") : t("teacherPortal.exams.createExam")}
             >
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <Label>Exam ID *</Label>
+                            <Label>{t("teacherPortal.exams.examIdLabel")}</Label>
                             <Input
                                 type="text"
                                 value={form.examId}
                                 onChange={(e) => f("examId", e.target.value)}
                                 required
-                                placeholder="e.g. CS-Q-25-01"
+                                placeholder={t("teacherPortal.exams.examIdPlaceholder")}
                             />
                         </div>
                         <div>
-                            <Label>Exam Name *</Label>
+                            <Label>{t("teacherPortal.exams.examNameLabel")}</Label>
                             <Input
                                 type="text"
                                 value={form.name}
                                 onChange={(e) => f("name", e.target.value)}
                                 required
-                                placeholder="e.g. Mid-Term Exam"
+                                placeholder={t("teacherPortal.exams.examNamePlaceholder")}
                             />
                         </div>
                         <div>
-                            <Label>Classroom *</Label>
+                            <Label>{t("teacherPortal.exams.classroomLabel")}</Label>
                             <FormCombobox
                                 items={classRooms}
                                 value={form.classRoomId}
                                 onValueChange={(v) => f("classRoomId", v)}
                                 required
-                                placeholder="Select classroom"
+                                placeholder={t("teacherPortal.exams.selectClassroom")}
                                 renderItem={(cr) =>
                                     `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`
                                 }
@@ -305,19 +307,19 @@ export default function TeacherExamsPage() {
                             />
                         </div>
                         <div>
-                            <Label>Type *</Label>
+                            <Label>{t("teacherPortal.exams.typeLabel")}</Label>
                             <FormCombobox
                                 items={examTypeOptions}
                                 value={form.examType}
                                 onValueChange={(v) => f("examType", v)}
-                                placeholder="Select exam type"
+                                placeholder={t("teacherPortal.exams.selectExamType")}
                                 renderItem={(opt) => opt.label}
                                 getItemValue={(opt) => opt.value}
                                 getItemLabel={(opt) => opt.label}
                             />
                         </div>
                         <div>
-                            <Label>Date</Label>
+                            <Label>{t("teacherPortal.exams.date")}</Label>
                             <Input
                                 type="date"
                                 value={form.date}
@@ -325,7 +327,7 @@ export default function TeacherExamsPage() {
                             />
                         </div>
                         <div>
-                            <Label>Start Time</Label>
+                            <Label>{t("teacherPortal.exams.startTime")}</Label>
                             <Input
                                 type="time"
                                 value={form.startTime}
@@ -333,7 +335,7 @@ export default function TeacherExamsPage() {
                             />
                         </div>
                         <div>
-                            <Label>End Time</Label>
+                            <Label>{t("teacherPortal.exams.endTime")}</Label>
                             <Input
                                 type="time"
                                 value={form.endTime}
@@ -341,41 +343,41 @@ export default function TeacherExamsPage() {
                             />
                         </div>
                         <div>
-                            <Label>Total Marks</Label>
+                            <Label>{t("teacherPortal.exams.totalMarksLabel")}</Label>
                             <Input
                                 type="number"
                                 value={form.totalMarks}
                                 onChange={(e) => f("totalMarks", e.target.value)}
-                                placeholder="e.g. 100"
+                                placeholder={t("teacherPortal.exams.totalMarksPlaceholder")}
                             />
                         </div>
                         <div>
-                            <Label>Passing Marks</Label>
+                            <Label>{t("teacherPortal.exams.passingMarksLabel")}</Label>
                             <Input
                                 type="number"
                                 value={form.passingMarks}
                                 onChange={(e) => f("passingMarks", e.target.value)}
-                                placeholder="e.g. 40"
+                                placeholder={t("teacherPortal.exams.passingMarksPlaceholder")}
                             />
                         </div>
                         <div>
-                            <Label>Status</Label>
+                            <Label>{t("teacherPortal.exams.statusLabel")}</Label>
                             <FormCombobox
                                 items={statusOptions}
                                 value={form.status}
                                 onValueChange={(v) => f("status", v)}
-                                placeholder="Select status"
+                                placeholder={t("teacherPortal.exams.selectStatus")}
                                 renderItem={(opt) => opt.label}
                                 getItemValue={(opt) => opt.value}
                                 getItemLabel={(opt) => opt.label}
                             />
                         </div>
                         <div className="col-span-2">
-                            <Label>Instructions</Label>
+                            <Label>{t("teacherPortal.exams.instructionsLabel")}</Label>
                             <Input
                                 value={form.instructions}
                                 onChange={(e) => f("instructions", e.target.value)}
-                                placeholder="Optional"
+                                placeholder={t("teacherPortal.exams.instructionsPlaceholder")}
                             />
                         </div>
                     </div>
@@ -386,10 +388,10 @@ export default function TeacherExamsPage() {
                             type="button"
                             onClick={() => setOpen(false)}
                         >
-                            Cancel
+                            {t("teacherPortal.exams.cancel")}
                         </Button>
                         <Button size="sm" type="submit" disabled={busy}>
-                            {busy ? "Saving…" : editing ? "Update" : "Create"}
+                            {busy ? t("teacherPortal.exams.saving") : editing ? t("teacherPortal.exams.update") : t("teacherPortal.exams.create")}
                         </Button>
                     </div>
                 </form>
@@ -401,7 +403,7 @@ export default function TeacherExamsPage() {
                 onClose={() => setConfirm(null)}
                 onConfirm={handleDelete}
                 loading={busy}
-                message={`Delete exam "${confirm?.name}"? This cannot be undone.`}
+                message={t("teacherPortal.exams.deleteConfirm", { name: confirm?.name })}
             />
         </>
     );
