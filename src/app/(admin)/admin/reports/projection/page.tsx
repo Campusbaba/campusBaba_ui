@@ -14,6 +14,7 @@ import { useStudents } from "@/hooks/useStudents";
 import { ArrowLeft, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -39,6 +40,7 @@ export default function ProjectionPage() {
     const { payments } = usePayments();
     const { students } = useStudents();
     const [growthRate, setGrowthRate] = useState(5);
+    const { t } = useTranslation();
 
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth();
@@ -96,10 +98,10 @@ export default function ProjectionPage() {
 
     type ProjRow = typeof projectionData[0];
     const projColumns: ColumnDef<ProjRow, unknown>[] = [
-        { accessorKey: "month", header: "Month" },
-        { accessorKey: "income", header: "Projected Income (৳)", cell: ({ getValue }) => <span className="text-emerald-400">৳{(getValue() as number).toLocaleString()}</span> },
-        { accessorKey: "expense", header: "Projected Expense (৳)", cell: ({ getValue }) => <span className="text-rose-400">৳{(getValue() as number).toLocaleString()}</span> },
-        { accessorKey: "profit", header: "Projected Profit (৳)", cell: ({ getValue }) => { const v = getValue() as number; return <span className={v >= 0 ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>৳{v.toLocaleString()}</span>; } },
+        { accessorKey: "month", header: t("reports.month") },
+        { accessorKey: "income", header: t("reports.projectedIncomeLabel"), cell: ({ getValue }) => <span className="text-emerald-400">৳{(getValue() as number).toLocaleString()}</span> },
+        { accessorKey: "expense", header: t("reports.projectedExpenseLabel"), cell: ({ getValue }) => <span className="text-rose-400">৳{(getValue() as number).toLocaleString()}</span> },
+        { accessorKey: "profit", header: t("reports.projectedProfit"), cell: ({ getValue }) => { const v = getValue() as number; return <span className={v >= 0 ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>৳{v.toLocaleString()}</span>; } },
     ];
 
     return (
@@ -110,13 +112,13 @@ export default function ProjectionPage() {
                     <ArrowLeft size={16} />
                 </Button>
                 <div>
-                    <h1 className="text-xl font-bold text-[--foreground]">Business Projection</h1>
-                    <p className="text-xs text-[--muted-foreground]">6-month forecast based on historical data + growth rate</p>
+                    <h1 className="text-xl font-bold text-[--foreground]">{t("reports.businessProjectionTitle")}</h1>
+                    <p className="text-xs text-[--muted-foreground]">{t("reports.forecastBasedOn")}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-3">
                     <div className="flex items-center gap-2 text-sm">
                         <TrendingUp size={14} className="text-[--muted-foreground]" />
-                        <span className="text-[--muted-foreground] text-xs">Growth %</span>
+                        <span className="text-[--muted-foreground] text-xs">{t("reports.growthPercent")}</span>
                         <input
                             type="number"
                             value={growthRate}
@@ -132,33 +134,33 @@ export default function ProjectionPage() {
             {/* Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <ReportStatCard
-                    title="YTD Income"
+                    title={t("reports.ytdIncome")}
                     value={`৳${totalCurrentIncome.toLocaleString()}`}
                     color="text-emerald-400"
                 />
                 <ReportStatCard
-                    title="Projected 6-mo Income"
+                    title={t("reports.projectedIncome")}
                     value={`৳${totalProjectedIncome.toLocaleString()}`}
                     color="text-blue-400"
-                    sub={`at ${growthRate}% growth`}
+                    sub={t("reports.atGrowth", { rate: growthRate })}
                 />
                 <ReportStatCard
-                    title="Projected 6-mo Expense"
+                    title={t("reports.projectedExpense")}
                     value={`৳${totalProjectedExpense.toLocaleString()}`}
                     color="text-rose-400"
                 />
                 <ReportStatCard
-                    title="Total Students"
+                    title={t("reports.totalStudents")}
                     value={(students ?? []).length.toLocaleString()}
-                    sub="active base"
+                    sub={t("reports.activeBase")}
                 />
             </div>
 
             {/* Combined Chart */}
             <div className="card p-4">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold">Historical + 6-Month Projection</h3>
-                    <span className="text-xs text-[--muted-foreground]">* = projected months</span>
+                    <h3 className="text-sm font-semibold">{t("reports.historicalPlusProjection")}</h3>
+                    <span className="text-xs text-[--muted-foreground]">* = {t("reports.projectedMonths")}</span>
                 </div>
                 <ResponsiveContainer width="100%" height={320}>
                     <ComposedChart data={combinedData}>
@@ -171,17 +173,17 @@ export default function ProjectionPage() {
                             x={MONTHS[currentMonth]}
                             stroke="var(--primary)"
                             strokeDasharray="4 4"
-                            label={{ value: "Now", fontSize: 10, fill: "var(--primary)" }}
+                            label={{ value: t("reports.now"), fontSize: 10, fill: "var(--primary)" }}
                         />
-                        <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} name="Income" opacity={0.85} />
-                        <Bar dataKey="expense" fill="#ef4444" radius={[4, 4, 0, 0]} name="Expense" opacity={0.85} />
+                        <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} name={t("reports.incomeLabel")} opacity={0.85} />
+                        <Bar dataKey="expense" fill="#ef4444" radius={[4, 4, 0, 0]} name={t("reports.expenseLabel")} opacity={0.85} />
                         <Line
                             type="monotone"
                             dataKey="profit"
                             stroke="#6366f1"
                             strokeWidth={2}
                             dot={{ r: 3 }}
-                            name="Net Profit"
+                            name={t("reports.netProfit")}
                         />
                     </ComposedChart>
                 </ResponsiveContainer>
@@ -190,7 +192,7 @@ export default function ProjectionPage() {
             <DataTable
                 data={projectionData}
                 columns={projColumns}
-                title="6-Month Projection"
+                title={t("reports.sixMonthProjection")}
                 exportFilename="business_projection"
                 pageSize={6}
             />

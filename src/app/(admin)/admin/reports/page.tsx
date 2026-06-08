@@ -2,50 +2,53 @@
 
 import { useRouter } from "next/navigation";
 import { TrendingDown, DollarSign, Users, BarChart3, ArrowRight } from "lucide-react";
-
-const reportCards = [
-    {
-        title: "Profit / Expense Report",
-        description: "Compare total income vs expenses, net profit trends over months.",
-        icon: TrendingDown,
-        color: "text-rose-400",
-        bg: "bg-rose-500/10",
-        href: "/admin/reports/profit-expense",
-    },
-    {
-        title: "Income Report",
-        description: "Breakdown of all income sources: tuition, exams, library and more.",
-        icon: DollarSign,
-        color: "text-emerald-400",
-        bg: "bg-emerald-500/10",
-        href: "/admin/reports/income",
-    },
-    {
-        title: "Student Enrollment Report",
-        description: "Monthly and yearly enrollment trends by class and gender.",
-        icon: Users,
-        color: "text-blue-400",
-        bg: "bg-blue-500/10",
-        href: "/admin/reports/enrollment",
-    },
-    {
-        title: "Business Projection",
-        description: "Forecast future revenue, expenses and growth based on historical data.",
-        icon: BarChart3,
-        color: "text-violet-400",
-        bg: "bg-violet-500/10",
-        href: "/admin/reports/projection",
-    },
-];
+import { useTranslation } from "react-i18next";
 
 export default function ReportsPage() {
     const router = useRouter();
+    const { t } = useTranslation();
+
+    const reportCards = [
+        {
+            title: t("reports.profitExpenseReport"),
+            description: t("reports.profitExpenseDesc"),
+            icon: TrendingDown,
+            color: "text-rose-400",
+            bg: "bg-rose-500/10",
+            href: "/admin/reports/profit-expense",
+        },
+        {
+            title: t("reports.incomeReport"),
+            description: t("reports.incomeDesc"),
+            icon: DollarSign,
+            color: "text-emerald-400",
+            bg: "bg-emerald-500/10",
+            href: "/admin/reports/income",
+        },
+        {
+            title: t("reports.enrollmentReport"),
+            description: t("reports.enrollmentDesc"),
+            icon: Users,
+            color: "text-blue-400",
+            bg: "bg-blue-500/10",
+            href: "/admin/reports/enrollment",
+        },
+        {
+            title: t("reports.businessProjection"),
+            description: t("reports.businessProjectionDesc"),
+            icon: BarChart3,
+            color: "text-violet-400",
+            bg: "bg-violet-500/10",
+            href: "/admin/reports/projection",
+        },
+    ];
+
     return (
         <div className="p-6 space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-[--foreground]">Reports</h1>
+                <h1 className="text-2xl font-bold text-[--foreground]">{t("reports.allReports")}</h1>
                 <p className="text-sm text-[--muted-foreground] mt-1">
-                    View analytics, download Excel exports and track school performance.
+                    {t("reports.viewAnalytics")}
                 </p>
             </div>
 
@@ -62,7 +65,7 @@ export default function ReportsPage() {
                         <h3 className="font-semibold text-[--foreground] text-sm mb-1">{card.title}</h3>
                         <p className="text-xs text-[--muted-foreground] leading-relaxed">{card.description}</p>
                         <div className="flex items-center gap-1 mt-4 text-xs text-[--primary] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                            View Report <ArrowRight size={12} />
+                            {t("reports.viewReport")} <ArrowRight size={12} />
                         </div>
                     </button>
                 ))}

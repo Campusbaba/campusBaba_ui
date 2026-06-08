@@ -12,6 +12,7 @@ import { usePayments } from "@/hooks/usePayments";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#0ea5e9", "#ec4899", "#f97316"];
@@ -20,6 +21,7 @@ export default function IncomeReportPage() {
     const router = useRouter();
     const { payments } = usePayments();
     const [year, setYear] = useState(new Date().getFullYear());
+    const { t } = useTranslation();
 
     const paidPayments = useMemo(
         () => (payments ?? []).filter(p => p.paymentStatus === "paid"),
@@ -59,9 +61,9 @@ export default function IncomeReportPage() {
 
     type IncomeRow = typeof monthlyData[0];
     const incomeColumns: ColumnDef<IncomeRow, unknown>[] = [
-        { accessorKey: "month", header: "Month" },
-        { accessorKey: "amount", header: "Income (৳)", cell: ({ getValue }) => <span className="text-emerald-400">৳{(getValue() as number).toLocaleString()}</span> },
-        { id: "pct", header: "% of Total", accessorFn: r => total ? `${((r.amount / total) * 100).toFixed(1)}%` : "—" },
+        { accessorKey: "month", header: t("reports.month") },
+        { accessorKey: "amount", header: t("reports.incomeTaka"), cell: ({ getValue }) => <span className="text-emerald-400">৳{(getValue() as number).toLocaleString()}</span> },
+        { id: "pct", header: t("reports.percentOfTotal"), accessorFn: r => total ? `${((r.amount / total) * 100).toFixed(1)}%` : "—" },
     ];
 
     const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
@@ -74,8 +76,8 @@ export default function IncomeReportPage() {
                     <ArrowLeft size={16} />
                 </Button>
                 <div>
-                    <h1 className="text-xl font-bold text-[--foreground]">Income Report</h1>
-                    <p className="text-xs text-[--muted-foreground]">All income sources breakdown</p>
+                    <h1 className="text-xl font-bold text-[--foreground]">{t("reports.incomeReportTitle")}</h1>
+                    <p className="text-xs text-[--muted-foreground]">{t("reports.allIncomeSources")}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
                     <select
@@ -90,21 +92,21 @@ export default function IncomeReportPage() {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <ReportStatCard title="Total Income" value={`৳${total.toLocaleString()}`} color="text-emerald-400" />
-                <ReportStatCard title="Monthly Average" value={`৳${Math.round(avg).toLocaleString()}`} />
+                <ReportStatCard title={t("reports.totalIncome")} value={`৳${total.toLocaleString()}`} color="text-emerald-400" />
+                <ReportStatCard title={t("reports.monthlyAverage")} value={`৳${Math.round(avg).toLocaleString()}`} />
                 <ReportStatCard
-                    title="Best Month"
+                    title={t("reports.bestMonth")}
                     value={best?.month ?? "—"}
                     sub={`৳${best?.amount.toLocaleString()}`}
                     color="text-blue-400"
                 />
-                <ReportStatCard title="Payment Types" value={String(categoryData.length)} />
+                <ReportStatCard title={t("reports.paymentTypes")} value={String(categoryData.length)} />
             </div>
 
             {/* Charts */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                 <div className="card p-4 xl:col-span-2">
-                    <h3 className="text-sm font-semibold mb-4">Monthly Income</h3>
+                    <h3 className="text-sm font-semibold mb-4">{t("reports.monthlyIncome")}</h3>
                     <ResponsiveContainer width="100%" height={280}>
                         <AreaChart data={monthlyData}>
                             <defs>
@@ -123,13 +125,13 @@ export default function IncomeReportPage() {
                                 stroke="#10b981"
                                 fill="url(#incomeGrad)"
                                 strokeWidth={2}
-                                name="Income"
+                                name={t("reports.incomeLabel")}
                             />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
                 <div className="card p-4">
-                    <h3 className="text-sm font-semibold mb-4">By Payment Type</h3>
+                    <h3 className="text-sm font-semibold mb-4">{t("reports.byPaymentType")}</h3>
                     <ResponsiveContainer width="100%" height={280}>
                         <PieChart>
                             <Pie
@@ -155,7 +157,7 @@ export default function IncomeReportPage() {
             <DataTable
                 data={monthlyData}
                 columns={incomeColumns}
-                title="Monthly Breakdown"
+                title={t("reports.monthlyBreakdown")}
                 exportFilename={`income_${year}`}
                 pageSize={12}
             />

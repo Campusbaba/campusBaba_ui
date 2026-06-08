@@ -16,6 +16,7 @@ import { toast } from "@/lib/toast";
 import { Save, CheckCircle2, XCircle, Loader2, ClipboardList } from "lucide-react";
 import api from "@/lib/axios";
 import { computeGrade } from "@/utils/computeExamGrade";
+import { useTranslation } from "react-i18next";
 
 type MarkRow = {
     marksObtained: string;   // string for controlled input
@@ -42,26 +43,27 @@ type StudentMarkRow = {
     result: "Pass" | "Fail" | "";
 };
 
-const statusOptions: { value: MarkRow["status"]; label: string }[] = [
-    { value: "pending", label: "Pending" },
-    { value: "evaluated", label: "Evaluated" },
-    { value: "published", label: "Published" },
-];
-
-const gradeBadge = (grade: string) => (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded ${grade === "A+" || grade === "A" ? "bg-emerald-50 text-emerald-700" :
-        grade === "B" ? "bg-blue-50 text-blue-700" :
-            grade === "C" ? "bg-amber-50 text-amber-700" :
-                grade === "D" ? "bg-orange-50 text-orange-700" :
-                    grade === "F" ? "bg-rose-50 text-rose-700" :
-                        "bg-[--muted] text-[--muted-foreground]"
-        }`}>{grade || "—"}</span>
-);
-
 export default function ExamMarksPage() {
+    const { t } = useTranslation();
     const { classRooms } = useClassRooms();
     const { exams } = useExams();
     const { marks, loading: marksLoading, fetchMarks, createMark, updateMark } = useExamMarks();
+
+    const statusOptions: { value: MarkRow["status"]; label: string }[] = useMemo(() => [
+        { value: "pending", label: t("exams.pending") },
+        { value: "evaluated", label: t("exams.evaluated") },
+        { value: "published", label: t("exams.published") },
+    ], [t]);
+
+    const gradeBadge = (grade: string) => (
+        <span className={`text-xs font-semibold px-2 py-0.5 rounded ${grade === "A+" || grade === "A" ? "bg-emerald-50 text-emerald-700" :
+            grade === "B" ? "bg-blue-50 text-blue-700" :
+                grade === "C" ? "bg-amber-50 text-amber-700" :
+                    grade === "D" ? "bg-orange-50 text-orange-700" :
+                        grade === "F" ? "bg-rose-50 text-rose-700" :
+                            "bg-[--muted] text-[--muted-foreground]"
+            }`}>{grade || "—"}</span>
+    );
 
     const [selectedClassId, setSelectedClassId] = useState<string>("");
     const [selectedExamId, setSelectedExamId] = useState<string>("");
@@ -88,11 +90,11 @@ export default function ExamMarksPage() {
             setStudents(res.data.data ?? []);
         } catch {
             setStudents([]);
-            toast.error("Failed to load students");
+            toast.error(t("exams.failedToLoadStudents"));
         } finally {
             setStudentsLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (!selectedClassId) { setStudents([]); setSelectedExamId(""); return; }
@@ -183,7 +185,7 @@ export default function ExamMarksPage() {
 
     const columns = useMemo<ColumnDef<StudentMarkRow, unknown>[]>(() => [
         {
-            id: "studentId", accessorKey: "studentId", header: "Student ID",
+            id: "studentId", accessorKey: "studentId", header: t("exams.studentId"),
             cell: ({ getValue }) => (
                 <span className="font-mono text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">
                     {String(getValue() ?? "—")}
@@ -191,7 +193,7 @@ export default function ExamMarksPage() {
             ),
         },
         {
-            id: "name", header: "Name", accessorFn: r => `${r.firstName} ${r.lastName}`,
+            id: "name", header: t("common.fields.name"), accessorFn: r => `${r.firstName} ${r.lastName}`,
             cell: ({ row: { original: r } }) => (
                 <div>
                     <p className="font-medium text-xs">{r.firstName} {r.lastName}</p>
@@ -200,7 +202,7 @@ export default function ExamMarksPage() {
             ),
         },
         {
-            id: "marksObtained", header: "Marks", accessorFn: r => isNaN(r.marksNum) ? -1 : r.marksNum,
+            id: "marksObtained", header: t("exams.marks"), accessorFn: r => isNaN(r.marksNum) ? -1 : r.marksNum,
             sortingFn: "basic",
             cell: ({ row: { original: r } }) => (
                 <Input
@@ -215,28 +217,28 @@ export default function ExamMarksPage() {
             ),
         },
         // {
-        //     id: "grade", accessorKey: "grade", header: "Grade",
+        //     id: "grade", accessorKey: "grade", header: t("exams.grade"),
         //     cell: ({ getValue }) => gradeBadge(String(getValue() ?? "")),
         // },
         {
-            id: "remarks", accessorKey: "remarks", header: "Remarks",
+            id: "remarks", accessorKey: "remarks", header: t("exams.remarks"),
             cell: ({ row: { original: r } }) => (
                 <Input
                     value={r.remarks}
                     onChange={e => updateRow(r._id, "remarks", e.target.value)}
-                    placeholder="Optional…"
+                    placeholder={t("exams.optional")}
                     className="h-8 text-xs w-36"
                 />
             ),
         },
         {
-            id: "status", accessorKey: "status", header: "Status",
+            id: "status", accessorKey: "status", header: t("exams.status"),
             cell: ({ row: { original: r } }) => (
                 <FormCombobox
                     items={statusOptions}
                     value={r.status}
                     onValueChange={v => updateRow(r._id, "status", v)}
-                    placeholder="Select status"
+                    placeholder={t("exams.selectStatus")}
                     renderItem={opt => opt.label}
                     getItemValue={opt => opt.value}
                     getItemLabel={opt => opt.label}
@@ -244,26 +246,26 @@ export default function ExamMarksPage() {
             ),
         },
         {
-            id: "result", accessorKey: "result", header: "Result",
+            id: "result", accessorKey: "result", header: t("exams.result"),
             cell: ({ row: { original: r } }) => (
                 <div className="flex items-center gap-1.5">
                     {r.result === "Pass" && (
                         <span className="flex items-center gap-1 text-emerald-600 text-xs font-medium">
-                            <CheckCircle2 size={13} />Pass
+                            <CheckCircle2 size={13} />{t("exams.pass")}
                         </span>
                     )}
                     {r.result === "Fail" && (
                         <span className="flex items-center gap-1 text-rose-600 text-xs font-medium">
-                            <XCircle size={13} />Fail
+                            <XCircle size={13} />{t("exams.fail")}
                         </span>
                     )}
                     {r.result === "" && <span className="text-[--muted-foreground] text-xs">—</span>}
-                    {r.saved && <Badge variant="secondary" className="text-[10px] px-1 py-0">saved</Badge>}
+                    {r.saved && <Badge variant="secondary" className="text-[10px] px-1 py-0">{t("exams.saved")}</Badge>}
                 </div>
             ),
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    ], [selectedExam?.totalMarks, selectedExam?.passingMarks]);
+    ], [selectedExam?.totalMarks, selectedExam?.passingMarks, t, statusOptions]);
 
     async function handleSaveAll() {
         if (!selectedExamId) return;
@@ -271,7 +273,7 @@ export default function ExamMarksPage() {
             const row = rows[s._id];
             return row && row.marksObtained !== "";
         });
-        if (toSave.length === 0) { toast.error("No marks entered"); return; }
+        if (toSave.length === 0) { toast.error(t("exams.noMarksEntered")); return; }
         setSaving(true);
         let successCount = 0;
         let failCount = 0;
@@ -280,7 +282,7 @@ export default function ExamMarksPage() {
             const obtained = Number(row.marksObtained);
             if (isNaN(obtained) || obtained < 0) { failCount++; continue; }
             const total = selectedExam?.totalMarks ?? 100;
-            if (obtained > total) { toast.error(`${s.firstName}'s marks exceed total (${total})`); failCount++; continue; }
+            if (obtained > total) { toast.error(t("exams.marksExceedTotal")); failCount++; continue; }
             const payload = {
                 examId: selectedExamId,
                 studentId: s._id,
@@ -306,8 +308,8 @@ export default function ExamMarksPage() {
             }
         }
         setSaving(false);
-        if (successCount > 0) toast.success(`${successCount} mark(s) saved`);
-        if (failCount > 0) toast.error(`${failCount} mark(s) failed to save`);
+        if (successCount > 0) toast.success(t("exams.marksSavedCount", { count: successCount }));
+        if (failCount > 0) toast.error(t("exams.marksFailedCount", { count: failCount }));
         // Refresh marks
         fetchMarks(selectedExamId);
     }
@@ -318,39 +320,39 @@ export default function ExamMarksPage() {
 
     return (
         <>
-            <Header title="Exam Marks" />
+            <Header title={t("common.pages.exammarks")} />
             <main className="p-5 space-y-5">
                 {/* Selectors */}
                 <div className="card p-5 space-y-4">
-                    <h2 className="text-sm font-semibold text-[--foreground]">Select Class & Exam</h2>
+                    <h2 className="text-sm font-semibold text-[--foreground]">{t("exams.selectClassroomAndExam")}</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <Label>Classroom</Label>
+                            <Label>{t("exams.classroom")}</Label>
                             <FormCombobox
                                 items={classRooms}
                                 value={selectedClassId}
                                 onValueChange={setSelectedClassId}
-                                placeholder="Select a classroom…"
-                                renderItem={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
+                                placeholder={`${t("exams.selectClassroom")}...`}
+                                renderItem={cr => `${cr.name}${cr.roomNumber ? ` — ${t("exams.room")} ${cr.roomNumber}` : ""}`}
                                 getItemValue={cr => cr._id}
-                                getItemLabel={cr => `${cr.name}${cr.roomNumber ? ` — Room ${cr.roomNumber}` : ""}`}
+                                getItemLabel={cr => `${cr.name}${cr.roomNumber ? ` — ${t("exams.room")} ${cr.roomNumber}` : ""}`}
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <Label>Exam</Label>
+                            <Label>{t("exams.title")}</Label>
                             <FormCombobox
                                 items={filteredExams}
                                 value={selectedExamId}
                                 onValueChange={setSelectedExamId}
                                 disabled={!selectedClassId || filteredExams.length === 0}
                                 placeholder={
-                                    !selectedClassId ? "Select a classroom first…" :
-                                        filteredExams.length === 0 ? "No exams for this class" :
-                                            "Select an exam…"
+                                    !selectedClassId ? t("exams.selectClassroomFirst") + "..." :
+                                        filteredExams.length === 0 ? t("exams.noExamsForClass") :
+                                            `${t("common.operations.select")}...`
                                 }
-                                renderItem={ex => `${ex.name} — ${ex.examType} (${ex.totalMarks} marks)`}
+                                renderItem={ex => `${ex.name} — ${ex.examType} (${ex.totalMarks} ${t("exams.marks")})`}
                                 getItemValue={ex => ex._id}
-                                getItemLabel={ex => `${ex.name} — ${ex.examType} (${ex.totalMarks} marks)`}
+                                getItemLabel={ex => `${ex.name} — ${ex.examType} (${ex.totalMarks} ${t("exams.marks")})`}
                             />
                         </div>
                     </div>
@@ -359,19 +361,19 @@ export default function ExamMarksPage() {
                     {selectedExam && (
                         <div className="flex flex-wrap gap-3 pt-1">
                             <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                Total Marks: <strong>{selectedExam.totalMarks}</strong>
+                                {t("exams.totalMarks")}: <strong>{selectedExam.totalMarks}</strong>
                             </span>
                             <span className="text-xs bg-rose-50 text-rose-700 px-2 py-1 rounded">
-                                Passing Marks: <strong>{selectedExam.passingMarks}</strong>
+                                {t("exams.passingMarks")}: <strong>{selectedExam.passingMarks}</strong>
                             </span>
                             <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded">
-                                Pass: <strong>{passCount}</strong>
+                                {t("exams.pass")}: <strong>{passCount}</strong>
                             </span>
                             <span className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded">
-                                Fail: <strong>{failCount}</strong>
+                                {t("exams.fail")}: <strong>{failCount}</strong>
                             </span>
                             <span className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded">
-                                Pending: <strong>{pendingCount}</strong>
+                                {t("exams.pending")}: <strong>{pendingCount}</strong>
                             </span>
                         </div>
                     )}
@@ -382,21 +384,21 @@ export default function ExamMarksPage() {
                     studentsLoading || marksLoading ? (
                         <div className="card p-10 text-center text-sm text-[--muted-foreground]">
                             <Loader2 size={20} className="animate-spin mx-auto mb-2" />
-                            Loading…
+                            {t("common.operations.loading")}
                         </div>
                     ) : (
                         <div className="space-y-3">
                             <div className="flex justify-end">
                                 <Button size="sm" onClick={handleSaveAll} disabled={saving}>
                                     {saving
-                                        ? <><Loader2 size={14} className="mr-1.5 animate-spin" />Saving…</>
-                                        : <><Save size={14} className="mr-1.5" />Save All</>}
+                                        ? <><Loader2 size={14} className="mr-1.5 animate-spin" />{t("common.operations.saving")}</>
+                                        : <><Save size={14} className="mr-1.5" />{t("exams.saveAll")}</>}
                                 </Button>
                             </div>
                             <DataTable
                                 data={tableData}
                                 columns={columns}
-                                title={`${selectedExam?.name ?? "Exam"} — ${tableData.length} students`}
+                                title={`${selectedExam?.name ?? t("exams.title")} — ${tableData.length} ${t("exams.student")}`}
                                 exportFilename={`marks_${selectedExam?.name ?? "exam"}`}
                                 pageSize={20}
                             />
@@ -408,7 +410,7 @@ export default function ExamMarksPage() {
                     <div className="card p-12">
                         <div className="text-center text-[--muted-foreground]">
                             <ClipboardList size={36} className="mx-auto mb-3 opacity-30" />
-                            <p className="text-sm">Select a classroom and exam to manage marks.</p>
+                            <p className="text-sm">{t("exams.selectClassAndExam")}</p>
                         </div>
                     </div>
                 )}

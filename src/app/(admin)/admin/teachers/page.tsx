@@ -16,6 +16,7 @@ import { Teacher, Department } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 type TF = {
     firstName: string; lastName: string; email: string; phone: string; dateOfBirth: string; gender: string;
     qualification: string; specialization: string; experience: string; joiningDate: string; salary: string; status: string;
@@ -32,6 +33,7 @@ const blank: TF = {
 };
 
 export default function TeachersPage() {
+    const { t } = useTranslation();
     const { teachers, loading, pagination, createTeacher, updateTeacher, deleteTeacher } = useTeachers();
     const { departments } = useDepartments();
     const [open, setOpen] = useState(false);
@@ -42,45 +44,45 @@ export default function TeachersPage() {
     const f = (k: keyof TF, v: string) => setForm(p => ({ ...p, [k]: v }));
 
     const basicFields = [
-        { key: "firstName" as keyof TF, label: "First Name", type: "text", required: true },
-        { key: "lastName" as keyof TF, label: "Last Name", type: "text", required: true },
-        { key: "email" as keyof TF, label: "Email", type: "email", required: true },
-        { key: "phone" as keyof TF, label: "Phone", type: "text", required: true },
-        { key: "dateOfBirth" as keyof TF, label: "Date of Birth", type: "date", required: true },
+        { key: "firstName" as keyof TF, label: t("teachers.firstName"), type: "text", required: true },
+        { key: "lastName" as keyof TF, label: t("teachers.lastName"), type: "text", required: true },
+        { key: "email" as keyof TF, label: t("teachers.email"), type: "email", required: true },
+        { key: "phone" as keyof TF, label: t("teachers.phone"), type: "text", required: true },
+        { key: "dateOfBirth" as keyof TF, label: t("teachers.dateOfBirth"), type: "date", required: true },
     ];
 
     const teacherFields = [
-        { key: "qualification" as keyof TF, label: "Qualification", type: "text", required: true },
-        { key: "specialization" as keyof TF, label: "Specialization (comma-separated)", type: "text", required: false, placeholder: "Math, Science" },
-        { key: "experience" as keyof TF, label: "Experience (years)", type: "number", required: true },
-        { key: "joiningDate" as keyof TF, label: "Joining Date", type: "date", required: false },
-        { key: "salary" as keyof TF, label: "Salary", type: "number", required: true },
+        { key: "qualification" as keyof TF, label: t("teachers.qualification"), type: "text", required: true },
+        { key: "specialization" as keyof TF, label: t("teachers.specializationLabel"), type: "text", required: false, placeholder: t("teachers.specializationPlaceholder") },
+        { key: "experience" as keyof TF, label: t("teachers.experienceYears"), type: "number", required: true },
+        { key: "joiningDate" as keyof TF, label: t("teachers.joiningDate"), type: "date", required: false },
+        { key: "salary" as keyof TF, label: t("teachers.salary"), type: "number", required: true },
     ];
 
     const addressFields = [
-        { key: "street" as keyof TF, label: "Street", required: true },
-        { key: "city" as keyof TF, label: "City", required: true },
-        { key: "state" as keyof TF, label: "State", required: true },
-        { key: "zipCode" as keyof TF, label: "Zip Code", required: true },
-        { key: "country" as keyof TF, label: "Country", required: true },
+        { key: "street" as keyof TF, label: t("teachers.street"), required: true },
+        { key: "city" as keyof TF, label: t("teachers.city"), required: true },
+        { key: "state" as keyof TF, label: t("teachers.state"), required: true },
+        { key: "zipCode" as keyof TF, label: t("teachers.zipCode"), required: true },
+        { key: "country" as keyof TF, label: t("teachers.country"), required: true },
     ];
 
     const emergencyFields = [
-        { key: "emergencyName" as keyof TF, label: "Name", required: true },
-        { key: "emergencyRelationship" as keyof TF, label: "Relationship", required: true },
-        { key: "emergencyPhone" as keyof TF, label: "Phone", required: true },
+        { key: "emergencyName" as keyof TF, label: t("teachers.name"), required: true },
+        { key: "emergencyRelationship" as keyof TF, label: t("teachers.relationship"), required: true },
+        { key: "emergencyPhone" as keyof TF, label: t("teachers.phone"), required: true },
     ];
 
     const genderOptions = [
-        { value: "male", label: "Male" },
-        { value: "female", label: "Female" },
-        { value: "other", label: "Other" },
+        { value: "male", label: t("teachers.male") },
+        { value: "female", label: t("teachers.female") },
+        { value: "other", label: t("teachers.other") },
     ];
 
     const statusOptions = [
-        { value: "active", label: "Active" },
-        { value: "inactive", label: "Inactive" },
-        { value: "on-leave", label: "On Leave" },
+        { value: "active", label: t("common.fields.active") },
+        { value: "inactive", label: t("common.fields.inactive") },
+        { value: "on-leave", label: t("teachers.onLeave") },
     ];
 
     function openAdd() { setEditing(null); setForm(blank); setOpen(true); }
@@ -112,52 +114,52 @@ export default function TeachersPage() {
                 emergencyContact: { name: form.emergencyName, relationship: form.emergencyRelationship, phone: form.emergencyPhone }
             };
             if (form.departmentId) payload.departmentId = form.departmentId;
-            if (editing) { await updateTeacher(editing._id, payload); toast.success("Teacher updated"); }
-            else { await createTeacher(payload); toast.success("Teacher added"); }
+            if (editing) { await updateTeacher(editing._id, payload); toast.success(t("teachers.teacherUpdated")); }
+            else { await createTeacher(payload); toast.success(t("teachers.teacherAdded")); }
             setOpen(false);
-        } catch { toast.error("Failed to save"); } finally { setBusy(false); }
+        }         catch { toast.error(t("teachers.failedToSave")); } finally { setBusy(false); }
     }
     async function handleDelete() {
         if (!confirm) return; setBusy(true);
-        try { await deleteTeacher(confirm._id); toast.success("Teacher deleted"); setConfirm(null); }
-        catch { toast.error("Failed to delete"); } finally { setBusy(false); }
+        try { await deleteTeacher(confirm._id); toast.success(t("teachers.teacherDeleted")); setConfirm(null); }
+        catch { toast.error(t("teachers.failedToDelete")); } finally { setBusy(false); }
     }
 
     const columns: ColumnDef<Teacher, unknown>[] = [
         {
-            id: "teacherId", accessorKey: "teacherId", header: "Teacher ID",
+            id: "teacherId", accessorKey: "teacherId", header: t("teachers.teacherId"),
             cell: ({ getValue }) => <span className="font-mono text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">{String(getValue() ?? "—")}</span>
         },
         {
-            id: "name", header: "Teacher", accessorFn: r => `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || "—",
+            id: "name", header: t("teachers.name"), accessorFn: r => `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim() || "—",
             cell: ({ row: { original: r } }) => {
                 const fullName = `${r.firstName ?? ""} ${r.lastName ?? ""}`.trim();
                 const initials = `${r.firstName?.[0] ?? ""}${r.lastName?.[0] ?? ""}`.toUpperCase() || "?";
                 return (<div className="flex items-center gap-2"><div><p className="font-medium text-sm">{fullName || "—"}</p><p className="text-xs text-[--muted-foreground]">{r.email}</p></div></div>);
             }
         },
-        { id: "phone", accessorKey: "phone", header: "Phone" },
-        { id: "qualification", accessorKey: "qualification", header: "Qualification" },
-        { id: "specialization", header: "Specialization", accessorFn: r => (r.specialization ?? []).join(", ") || "—" },
-        { id: "experience", header: "Experience", accessorFn: r => `${r.experience ?? 0} yrs` },
-        { id: "joiningDate", header: "Joined", accessorFn: r => formatDate(r.joiningDate) },
-        { id: "salary", header: "Salary", accessorFn: r => `৳${(r.salary ?? 0).toLocaleString()}` },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
+        { id: "phone", accessorKey: "phone", header: t("teachers.phone") },
+        { id: "qualification", accessorKey: "qualification", header: t("teachers.qualification") },
+        { id: "specialization", header: t("teachers.specialization"), accessorFn: r => (r.specialization ?? []).join(", ") || "—" },
+        { id: "experience", header: t("teachers.experience"), accessorFn: r => `${r.experience ?? 0} ${t("teachers.yrs")}` },
+        { id: "joiningDate", header: t("teachers.joined"), accessorFn: r => formatDate(r.joiningDate) },
+        { id: "salary", header: t("teachers.salary"), accessorFn: r => `৳${(r.salary ?? 0).toLocaleString()}` },
+        { id: "status", header: t("teachers.status"), accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 
     return (
         <>
-            <Header title="Teachers" />
+            <Header title={t("common.pages.teachers")} />
             <main className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                    <div><h2 className="text-base font-semibold">All Teachers</h2><p className="text-sm text-[--muted-foreground]">{pagination?.totalItems ?? 0} total</p></div>
-                    <Button onClick={openAdd}><Plus size={15} className="mr-1" />Add Teacher</Button>
+                    <div><h2 className="text-base font-semibold">{t("teachers.allTeachers")}</h2><p className="text-sm text-[--muted-foreground]">{pagination?.totalItems ?? 0} {t("teachers.total")}</p></div>
+                    <Button onClick={openAdd}><Plus size={15} className="mr-1" />{t("teachers.addTeacher")}</Button>
                 </div>
-                {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                    : <DataTable data={teachers} columns={columns} title="Teachers" exportFilename="teachers" />}
+                {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("common.operations.loading")}</div>
+                    : <DataTable data={teachers} columns={columns} title={t("common.pages.teachers")} exportFilename="teachers" />}
             </main>
-            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Teacher" : "Add Teacher"}>
+            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? t("teachers.editTeacher") : t("teachers.addTeacher")}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         {basicFields.map(field => (
@@ -172,12 +174,12 @@ export default function TeachersPage() {
                             </div>
                         ))}
                         <div>
-                            <Label>Gender*</Label>
+                            <Label>{t("teachers.gender")}*</Label>
                             <FormCombobox
                                 items={genderOptions}
                                 value={form.gender}
                                 onValueChange={v => f("gender", v ?? "")}
-                                placeholder="Select gender"
+                                placeholder={t("teachers.selectGender")}
                                 required
                                 getItemValue={opt => opt.value}
                                 renderItem={opt => opt.label}
@@ -197,30 +199,30 @@ export default function TeachersPage() {
                             </div>
                         ))}
                         <div>
-                            <Label>Status</Label>
+                            <Label>{t("teachers.status")}</Label>
                             <FormCombobox
                                 items={statusOptions}
                                 value={form.status}
                                 onValueChange={v => f("status", v ?? "")}
-                                placeholder="Select status"
+                                placeholder={t("teachers.selectStatus")}
                                 getItemValue={opt => opt.value}
                                 renderItem={opt => opt.label}
                                 getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div>
-                            <Label>Department</Label>
+                            <Label>{t("teachers.department")}</Label>
                             <FormCombobox
                                 items={departments}
                                 value={form.departmentId}
                                 onValueChange={v => f("departmentId", v ?? "")}
-                                placeholder="Select department"
+                                placeholder={t("teachers.selectDepartment")}
                                 getItemValue={dept => dept._id}
                                 renderItem={dept => dept.name}
                                 getItemLabel={dept => dept.name}
                             />
                         </div>
-                        <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Address</p></div>
+                        <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">{t("teachers.address")}</p></div>
                         {addressFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}{field.required && "*"}</Label>
@@ -231,7 +233,7 @@ export default function TeachersPage() {
                                 />
                             </div>
                         ))}
-                        <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">Emergency Contact</p></div>
+                        <div className="col-span-2"><p className="text-xs font-semibold text-[--muted-foreground] uppercase tracking-wide mt-2">{t("teachers.emergencyContact")}</p></div>
                         {emergencyFields.map(field => (
                             <div key={field.key}>
                                 <Label>{field.label}{field.required && "*"}</Label>
@@ -244,13 +246,13 @@ export default function TeachersPage() {
                         ))}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Create"}</Button>
+                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>{t("common.operations.cancel")}</Button>
+                        <Button size="sm" type="submit" disabled={busy}>{busy ? t("common.operations.saving") : editing ? t("common.operations.update") : t("common.operations.create")}</Button>
                     </div>
                 </form>
             </FormDialog>
             <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
-                message={`Delete ${confirm?.firstName} ${confirm?.lastName}? This cannot be undone.`} />
+                message={confirm ? t("teachers.deleteConfirmMessage", { firstName: confirm.firstName, lastName: confirm.lastName }) : ""} />
         </>
     );
 }

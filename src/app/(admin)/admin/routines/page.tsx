@@ -16,17 +16,22 @@ import { useTeachers } from "@/hooks/useTeachers";
 import { Routine } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { useTranslation } from "react-i18next";
 
-const DAY_OPTIONS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map(d => ({ value: d, label: d.charAt(0).toUpperCase() + d.slice(1) }));
-const STATUS_OPTIONS = [{ value: "active", label: "Active" }, { value: "cancelled", label: "Cancelled" }, { value: "rescheduled", label: "Rescheduled" }];
+const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
+const STATUS_KEYS = ["active", "cancelled", "rescheduled"] as const;
 
 type TF = { classRoomId: string; teacherId: string; subject: string; dayOfWeek: string; startTime: string; endTime: string; roomNumber: string; status: string };
 const blank: TF = { classRoomId: "", teacherId: "", subject: "", dayOfWeek: "monday", startTime: "", endTime: "", roomNumber: "", status: "active" };
 
 export default function RoutinesPage() {
+    const { t } = useTranslation();
     const { routines, loading, createRoutine, updateRoutine, deleteRoutine } = useRoutines();
     const { classRooms } = useClassRooms();
     const { teachers } = useTeachers();
+
+    const DAY_OPTIONS = DAY_KEYS.map(d => ({ value: d, label: t(`routines.${d}`) }));
+    const STATUS_OPTIONS = STATUS_KEYS.map(s => ({ value: s, label: t(`routines.${s}`) }));
 
     const [open, setOpen] = useState(false);
     const [editing, setEditing] = useState<Routine | null>(null);
@@ -53,8 +58,8 @@ export default function RoutinesPage() {
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!form.classRoomId) { toast.error("Please select a classroom"); return; }
-        if (!form.teacherId) { toast.error("Please select a teacher"); return; }
+        if (!form.classRoomId) { toast.error(t("routines.pleaseSelectClassroom")); return; }
+        if (!form.teacherId) { toast.error(t("routines.pleaseSelectTeacher")); return; }
         setBusy(true);
         try {
             const payload = {
@@ -62,41 +67,41 @@ export default function RoutinesPage() {
                 status: form.status as "active" | "cancelled" | "rescheduled",
                 dayOfWeek: form.dayOfWeek as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday",
             };
-            if (editing) { await updateRoutine(editing._id, payload); toast.success("Routine updated"); }
-            else { await createRoutine(payload); toast.success("Routine created"); }
+            if (editing) { await updateRoutine(editing._id, payload); toast.success(t("routines.routineUpdated")); }
+            else { await createRoutine(payload); toast.success(t("routines.routineCreated")); }
             setOpen(false);
-        } catch { toast.error("Failed to save routine"); } finally { setBusy(false); }
+        } catch { toast.error(t("routines.failedToSave")); } finally { setBusy(false); }
     }
 
     async function handleDelete() {
         if (!confirm) return;
         setBusy(true);
-        try { await deleteRoutine(confirm._id); toast.success("Routine deleted"); setConfirm(null); }
-        catch { toast.error("Failed to delete"); } finally { setBusy(false); }
+        try { await deleteRoutine(confirm._id); toast.success(t("routines.routineDeleted")); setConfirm(null); }
+        catch { toast.error(t("routines.failedToDelete")); } finally { setBusy(false); }
     }
 
     const columns: ColumnDef<Routine, unknown>[] = [
         {
-            id: "class", header: "Classroom",
+            id: "class", header: t("routines.classroom"),
             accessorFn: r => typeof r.classRoomId === "object" ? (r.classRoomId as { name: string }).name : String(r.classRoomId)
         },
         {
-            id: "teacher", header: "Teacher",
+            id: "teacher", header: t("routines.teacher"),
             accessorFn: r => r.teacherId && typeof r.teacherId === "object"
                 ? `${(r.teacherId as { firstName: string; lastName: string }).firstName} ${(r.teacherId as { firstName: string; lastName: string }).lastName}`
-                : r.teacherId ? String(r.teacherId) : "Unassigned"
+                : r.teacherId ? String(r.teacherId) : t("routines.unassigned")
         },
-        { id: "subject", accessorKey: "subject", header: "Subject" },
+        { id: "subject", accessorKey: "subject", header: t("routines.subject") },
         {
-            id: "dayOfWeek", accessorKey: "dayOfWeek", header: "Day",
-            cell: ({ getValue }) => <span className="capitalize">{String(getValue())}</span>
+            id: "dayOfWeek", accessorKey: "dayOfWeek", header: t("routines.day"),
+            cell: ({ getValue }) => <span className="capitalize">{t(`routines.${String(getValue())}`)}</span>
         },
-        { id: "startTime", accessorKey: "startTime", header: "Start" },
-        { id: "endTime", accessorKey: "endTime", header: "End" },
-        { id: "roomNumber", accessorKey: "roomNumber", header: "Room" },
+        { id: "startTime", accessorKey: "startTime", header: t("routines.startLabel") },
+        { id: "endTime", accessorKey: "endTime", header: t("routines.endLabel") },
+        { id: "roomNumber", accessorKey: "roomNumber", header: t("routines.roomNumber") },
         {
-            id: "status", header: "Status", accessorKey: "status",
-            cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge>
+            id: "status", header: t("routines.status"), accessorKey: "status",
+            cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{t(`routines.${String(getValue())}`)}</Badge>
         },
         {
             id: "actions", header: "",
@@ -111,45 +116,45 @@ export default function RoutinesPage() {
 
     return (
         <>
-            <Header title="Routines" />
+            <Header title={t("common.pages.routines")} />
             <main className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-base font-semibold">Class Routines</h2>
-                        <p className="text-sm text-[--muted-foreground]">{routines.length} entries</p>
+                        <h2 className="text-base font-semibold">{t("routines.classRoutines")}</h2>
+                        <p className="text-sm text-[--muted-foreground]">{routines.length} {t("routines.entries")}</p>
                     </div>
-                    <Button onClick={openAdd}><Plus size={15} className="mr-1" />Add Routine</Button>
+                    <Button onClick={openAdd}><Plus size={15} className="mr-1" />{t("routines.addRoutine")}</Button>
                 </div>
                 {loading
-                    ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                    : <DataTable data={routines} columns={columns} title="Routines" exportFilename="routines" />
+                    ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("common.operations.loading")}</div>
+                    : <DataTable data={routines} columns={columns} title={t("common.pages.routines")} exportFilename="routines" />
                 }
             </main>
 
-            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Routine" : "Add Routine"} className="max-w-lg">
+            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? t("routines.editRoutine") : t("routines.addRoutine")} className="max-w-lg">
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {/* Classroom */}
                     <div className="flex flex-col gap-1">
-                        <Label>Classroom *</Label>
+                        <Label>{t("routines.classroomLabel")}</Label>
                         <FormCombobox
                             items={classRooms}
                             value={form.classRoomId}
                             onValueChange={v => f("classRoomId", v)}
-                            placeholder="Select classroom"
-                            renderItem={cr => `${cr.name} ${cr.roomNumber ? `— Room ${cr.roomNumber}` : ""}`}
+                            placeholder={t("routines.selectClassroom")}
+                            renderItem={cr => `${cr.name} ${cr.roomNumber ? `— ${t("routines.room")} ${cr.roomNumber}` : ""}`}
                             getItemValue={cr => cr._id}
-                            getItemLabel={cr => `${cr.name} ${cr.roomNumber ? `— Room ${cr.roomNumber}` : ""}`}
+                            getItemLabel={cr => `${cr.name} ${cr.roomNumber ? `— ${t("routines.room")} ${cr.roomNumber}` : ""}`}
                         />
                     </div>
 
                     {/* Teacher */}
                     <div className="flex flex-col gap-1">
-                        <Label>Teacher *</Label>
+                        <Label>{t("routines.teacherLabel")}</Label>
                         <FormCombobox
                             items={teachers}
                             value={form.teacherId}
                             onValueChange={v => f("teacherId", v)}
-                            placeholder="Select teacher"
+                            placeholder={t("routines.selectTeacher")}
                             renderItem={t => `${t.firstName} ${t.lastName}`}
                             getItemValue={t => t._id}
                             getItemLabel={t => `${t.firstName} ${t.lastName}`}
@@ -159,18 +164,18 @@ export default function RoutinesPage() {
                     <div className="grid grid-cols-2 gap-3">
                         {/* Subject */}
                         <div className="flex flex-col gap-1">
-                            <Label>Subject *</Label>
-                            <Input value={form.subject} onChange={e => f("subject", e.target.value)} required placeholder="e.g. Mathematics" />
+                            <Label>{t("routines.subjectLabel")}</Label>
+                            <Input value={form.subject} onChange={e => f("subject", e.target.value)} required placeholder={t("routines.subjectPlaceholder")} />
                         </div>
 
                         {/* Day of Week */}
                         <div className="flex flex-col gap-1">
-                            <Label>Day *</Label>
+                            <Label>{t("routines.dayLabel")}</Label>
                             <FormCombobox
                                 items={DAY_OPTIONS}
                                 value={form.dayOfWeek}
                                 onValueChange={v => f("dayOfWeek", v)}
-                                placeholder="Select day"
+                                placeholder={t("routines.selectDay")}
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
                                 getItemLabel={opt => opt.label}
@@ -179,30 +184,30 @@ export default function RoutinesPage() {
 
                         {/* Start Time */}
                         <div className="flex flex-col gap-1">
-                            <Label>Start Time *</Label>
+                            <Label>{t("routines.startTimeLabel")}</Label>
                             <Input type="time" value={form.startTime} onChange={e => f("startTime", e.target.value)} required />
                         </div>
 
                         {/* End Time */}
                         <div className="flex flex-col gap-1">
-                            <Label>End Time *</Label>
+                            <Label>{t("routines.endTimeLabel")}</Label>
                             <Input type="time" value={form.endTime} onChange={e => f("endTime", e.target.value)} required />
                         </div>
 
                         {/* Room Number */}
                         <div className="flex flex-col gap-1">
-                            <Label>Room Number *</Label>
-                            <Input value={form.roomNumber} onChange={e => f("roomNumber", e.target.value)} required placeholder="e.g. 101" />
+                            <Label>{t("routines.roomNumberLabel")}</Label>
+                            <Input value={form.roomNumber} onChange={e => f("roomNumber", e.target.value)} required placeholder={t("routines.roomNumberPlaceholder")} />
                         </div>
 
                         {/* Status */}
                         <div className="flex flex-col gap-1">
-                            <Label>Status</Label>
+                            <Label>{t("routines.statusLabel")}</Label>
                             <FormCombobox
                                 items={STATUS_OPTIONS}
                                 value={form.status}
                                 onValueChange={v => f("status", v)}
-                                placeholder="Select status"
+                                placeholder={t("routines.selectStatus")}
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
                                 getItemLabel={opt => opt.label}
@@ -211,8 +216,8 @@ export default function RoutinesPage() {
                     </div>
 
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Create"}</Button>
+                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>{t("common.operations.cancel")}</Button>
+                        <Button size="sm" type="submit" disabled={busy}>{busy ? t("common.operations.saving") : editing ? t("common.operations.update") : t("common.operations.create")}</Button>
                     </div>
                 </form>
             </FormDialog>
@@ -222,7 +227,7 @@ export default function RoutinesPage() {
                 onClose={() => setConfirm(null)}
                 onConfirm={handleDelete}
                 loading={busy}
-                message="Delete this routine entry? This cannot be undone."
+                message={t("routines.deleteConfirmMessage")}
             />
         </>
     );

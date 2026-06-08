@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = "payments" | "enrollments";
@@ -38,19 +39,9 @@ const blank: TF = {
 };
 
 // ─── Options ──────────────────────────────────────────────────────────────────
-const paymentTypeOptions = [
-    { value: "tuition", label: "Tuition" }, { value: "exam", label: "Exam" },
-    { value: "library", label: "Library" }, { value: "transport", label: "Transport" },
-    { value: "hostel", label: "Hostel" }, { value: "other", label: "Other" },
-];
-const paymentMethodOptions = [
-    { value: "cash", label: "Cash" }, { value: "card", label: "Card" },
-    { value: "bank-transfer", label: "Bank Transfer" }, { value: "online", label: "Online" },
-];
-const paymentStatusOptions = [
-    { value: "pending", label: "Pending" }, { value: "paid", label: "Paid" },
-    { value: "overdue", label: "Overdue" }, { value: "cancelled", label: "Cancelled" },
-];
+const paymentTypeKeys = ["tuition", "exam", "library", "transport", "hostel", "other"] as const;
+const paymentMethodKeys = ["cash", "card", "bank-transfer", "online"] as const;
+const paymentStatusKeys = ["pending", "paid", "overdue", "cancelled"] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function studentName(s: string | Student | undefined): string {
@@ -98,6 +89,7 @@ function StatCard({ label, value, icon: Icon, color }: {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function PaymentsPage() {
+    const { t } = useTranslation();
     const {
         payments, enrollments, stats, pagination, enrollmentPagination,
         loading, enrollmentsLoading,
@@ -115,6 +107,10 @@ export default function PaymentsPage() {
     const [invoice, setInvoice] = useState<Payment | null>(null);
     const [busy, setBusy] = useState(false);
     const [enrollmentFilter, setEnrollmentFilter] = useState("all");
+
+    const paymentTypeOptions = paymentTypeKeys.map(v => ({ value: v, label: t(`payments.${v}`) }));
+    const paymentMethodOptions = paymentMethodKeys.map(v => ({ value: v, label: t(`payments.${v}`) }));
+    const paymentStatusOptions = paymentStatusKeys.map(v => ({ value: v, label: t(`payments.${v}`) }));
 
     const f = (k: keyof TF, v: string) => setForm(p => ({ ...p, [k]: v }));
 
@@ -162,19 +158,19 @@ export default function PaymentsPage() {
             };
             if (editing) {
                 await updatePayment(editing._id, payload);
-                toast.success("Payment updated");
+                toast.success(t("payments.updated"));
             } else {
                 await createPayment(payload);
-                toast.success("Payment created");
+                toast.success(t("payments.created"));
             }
             setOpen(false);
-        } catch { toast.error("Failed to save payment"); } finally { setBusy(false); }
+        } catch { toast.error(t("payments.failedToSave")); } finally { setBusy(false); }
     }
 
     async function handleDelete() {
         if (!confirm) return; setBusy(true);
-        try { await deletePayment(confirm._id); toast.success("Payment deleted"); setConfirm(null); }
-        catch { toast.error("Failed to delete"); } finally { setBusy(false); }
+        try { await deletePayment(confirm._id); toast.success(t("payments.deleted")); setConfirm(null); }
+        catch { toast.error(t("payments.failedToDelete")); } finally { setBusy(false); }
     }
 
     function openEditFromEnrollment(e: Enrollment) {
@@ -200,10 +196,10 @@ export default function PaymentsPage() {
         setBusy(true);
         try {
             await activateStudent(enrollment._id);
-            toast.success(`${enrollment.student.firstName} ${enrollment.student.lastName} activated`);
+            toast.success(`${enrollment.student.firstName} ${enrollment.student.lastName} ${t("payments.activated")}`);
         } catch (err: unknown) {
             const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-            toast.error(msg ?? "Failed to activate student");
+            toast.error(msg ?? t("payments.failedToActivate"));
         } finally { setBusy(false); }
     }
 
@@ -213,27 +209,27 @@ export default function PaymentsPage() {
 
     // ─── Payment Columns ──────────────────────────────────────────────────────
     const paymentColumns: ColumnDef<Payment, unknown>[] = [
-        { id: "paymentId", header: "Payment ID", accessorKey: "paymentId" },
+        { id: "paymentId", header: t("payments.paymentId"), accessorKey: "paymentId" },
         {
-            id: "student", header: "Student",
+            id: "student", header: t("payments.student"),
             accessorFn: r => studentName(r.studentId as Student | string),
         },
         {
-            id: "course", header: "Course",
+            id: "course", header: t("payments.course"),
             accessorFn: r => courseName(r.courseId as Course | string),
         },
-        { id: "paymentType", accessorKey: "paymentType", header: "Type" },
-        { id: "amount", header: "Amount", accessorFn: r => formatCurrency(r.amount) },
-        { id: "paymentMethod", accessorKey: "paymentMethod", header: "Method" },
-        { id: "academicYear", accessorKey: "academicYear", header: "Year" },
-        { id: "semester", accessorKey: "semester", header: "Semester" },
-        { id: "dueDate", header: "Due Date", accessorFn: r => formatDate(r.dueDate) },
-        { id: "paidDate", header: "Paid Date", accessorFn: r => formatDate(r.paidDate) },
+        { id: "paymentType", accessorKey: "paymentType", header: t("payments.type") },
+        { id: "amount", header: t("payments.amount"), accessorFn: r => formatCurrency(r.amount) },
+        { id: "paymentMethod", accessorKey: "paymentMethod", header: t("payments.method") },
+        { id: "academicYear", accessorKey: "academicYear", header: t("payments.year") },
+        { id: "semester", accessorKey: "semester", header: t("payments.semester") },
+        { id: "dueDate", header: t("payments.dueDate"), accessorFn: r => formatDate(r.dueDate) },
+        { id: "paidDate", header: t("payments.paidDate"), accessorFn: r => formatDate(r.paidDate) },
         {
-            id: "paymentStatus", header: "Status", accessorKey: "paymentStatus",
+            id: "paymentStatus", header: t("payments.status"), accessorKey: "paymentStatus",
             cell: ({ getValue }) => {
                 const v = String(getValue());
-                return <Badge variant={statusVariant(v)}>{v}</Badge>;
+                return <Badge variant={statusVariant(v)}>{t(`payments.${v}`)}</Badge>;
             },
         },
         {
@@ -243,11 +239,11 @@ export default function PaymentsPage() {
                     <Button
                         variant="outline"
                         size="sm"
-                        title="View Invoice"
+                        title={t("payments.viewInvoice")}
                         className="h-7 gap-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                         onClick={() => setInvoice(r)}
                     >
-                        <Eye size={12} />Invoice
+                        <Eye size={12} />{t("payments.invoice")}
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button>
                     <Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button>
@@ -259,34 +255,34 @@ export default function PaymentsPage() {
     // ─── Enrollment Columns ───────────────────────────────────────────────────
     const enrollmentColumns: ColumnDef<Enrollment, unknown>[] = [
         {
-            id: "studentId", header: "Student ID",
+            id: "studentId", header: t("payments.studentId"),
             accessorFn: r => r.student.studentId ?? "—",
         },
         {
-            id: "studentName", header: "Student Name",
+            id: "studentName", header: t("payments.studentName"),
             accessorFn: r => `${r.student.firstName} ${r.student.lastName}`,
         },
-        { id: "email", header: "Email", accessorFn: r => r.student.email },
-        { id: "courseName", header: "Course", accessorFn: r => r.course?.name ?? "—" },
-        { id: "courseCode", header: "Code", accessorFn: r => r.course?.code ?? "—" },
-        { id: "paymentType", header: "Fee Type", accessorFn: r => r.paymentType },
-        { id: "amount", header: "Amount", accessorFn: r => formatCurrency(r.amount) },
-        { id: "dueDate", header: "Due Date", accessorFn: r => formatDate(r.dueDate) },
-        { id: "paidDate", header: "Paid Date", accessorFn: r => formatDate(r.paidDate) },
+        { id: "email", header: t("payments.email"), accessorFn: r => r.student.email },
+        { id: "courseName", header: t("payments.course"), accessorFn: r => r.course?.name ?? "—" },
+        { id: "courseCode", header: t("payments.code"), accessorFn: r => r.course?.code ?? "—" },
+        { id: "paymentType", header: t("payments.feeType"), accessorFn: r => r.paymentType },
+        { id: "amount", header: t("payments.amount"), accessorFn: r => formatCurrency(r.amount) },
+        { id: "dueDate", header: t("payments.dueDate"), accessorFn: r => formatDate(r.dueDate) },
+        { id: "paidDate", header: t("payments.paidDate"), accessorFn: r => formatDate(r.paidDate) },
         {
-            id: "paymentStatus", header: "Payment Status",
+            id: "paymentStatus", header: t("payments.paymentStatus"),
             cell: ({ row: { original: r } }) => (
-                <Badge variant={statusVariant(r.paymentStatus)}>{r.paymentStatus}</Badge>
+                <Badge variant={statusVariant(r.paymentStatus)}>{t(`payments.${r.paymentStatus}`)}</Badge>
             ),
         },
         {
-            id: "studentStatus", header: "Student Status",
+            id: "studentStatus", header: t("payments.studentStatus"),
             cell: ({ row: { original: r } }) => (
                 <Badge variant={studentStatusVariant(r.student.status)}>{r.student.status}</Badge>
             ),
         },
         {
-            id: "actions", header: "Actions",
+            id: "actions", header: t("common.operations.actions"),
             cell: ({ row: { original: r } }) => {
                 const canActivate = r.paymentStatus === "paid" && r.student.status !== "active";
                 return (
@@ -302,7 +298,7 @@ export default function PaymentsPage() {
                             className="gap-1"
                         >
                             <UserCheck size={13} />
-                            {r.student.status === "active" ? "Active" : "Activate"}
+                            {r.student.status === "active" ? t("common.fields.active") : t("payments.activate")}
                         </Button>
                     </div>
                 );
@@ -312,14 +308,14 @@ export default function PaymentsPage() {
 
     return (
         <>
-            <Header title="Payments" />
+            <Header title={t("common.pages.payments")} />
             <main className="p-5 space-y-5">
                 {/* ── Stats ─────────────────────────────────────────── */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <StatCard label="Total Revenue" value={formatCurrency(stats?.totalRevenue ?? 0)} icon={TrendingUp} color="bg-green-500" />
-                    <StatCard label="Pending Amount" value={formatCurrency(stats?.pendingAmount ?? 0)} icon={Clock} color="bg-yellow-500" />
-                    <StatCard label="Paid Payments" value={paidCount} icon={CheckCircle2} color="bg-blue-500" />
-                    <StatCard label="Overdue" value={overdueCount} icon={AlertCircle} color="bg-red-500" />
+                    <StatCard label={t("payments.totalRevenue")} value={formatCurrency(stats?.totalRevenue ?? 0)} icon={TrendingUp} color="bg-green-500" />
+                    <StatCard label={t("payments.pendingAmount")} value={formatCurrency(stats?.pendingAmount ?? 0)} icon={Clock} color="bg-yellow-500" />
+                    <StatCard label={t("payments.paidPayments")} value={paidCount} icon={CheckCircle2} color="bg-blue-500" />
+                    <StatCard label={t("payments.overdue")} value={overdueCount} icon={AlertCircle} color="bg-red-500" />
                 </div>
 
                 {/* ── Tabs ──────────────────────────────────────────── */}
@@ -328,13 +324,13 @@ export default function PaymentsPage() {
                         onClick={() => setTab("payments")}
                         className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${tab === "payments" ? "border-[--primary] text-[--primary]" : "border-transparent text-[--muted-foreground]"}`}
                     >
-                        <CreditCard size={14} className="inline mr-1 mb-0.5" />All Payments
+                        <CreditCard size={14} className="inline mr-1 mb-0.5" />{t("payments.allPaymentsTab")}
                     </button>
                     <button
                         onClick={() => setTab("enrollments")}
                         className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${tab === "enrollments" ? "border-[--primary] text-[--primary]" : "border-transparent text-[--muted-foreground]"}`}
                     >
-                        <UserCheck size={14} className="inline mr-1 mb-0.5" />Enrollments
+                        <UserCheck size={14} className="inline mr-1 mb-0.5" />{t("payments.enrollments")}
                     </button>
                 </div>
 
@@ -343,14 +339,14 @@ export default function PaymentsPage() {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-base font-semibold">All Payments</h2>
-                                <p className="text-sm text-[--muted-foreground]">{pagination?.totalItems ?? 0} total records</p>
+                                <h2 className="text-base font-semibold">{t("payments.allPayments")}</h2>
+                                <p className="text-sm text-[--muted-foreground]">{pagination?.totalItems ?? 0} {t("payments.totalRecords")}</p>
                             </div>
-                            <Button onClick={openAdd}><Plus size={15} className="mr-1" />Add Payment</Button>
+                            <Button onClick={openAdd}><Plus size={15} className="mr-1" />{t("payments.addPayment")}</Button>
                         </div>
                         {loading
-                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                            : <DataTable data={payments} columns={paymentColumns} title="Payments" exportFilename="payments" />
+                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("payments.loading")}</div>
+                            : <DataTable data={payments} columns={paymentColumns} title={t("common.pages.payments")} exportFilename="payments" />
                         }
                     </div>
                 )}
@@ -360,16 +356,16 @@ export default function PaymentsPage() {
                     <div className="space-y-4">
                         <div className="flex items-center justify-between flex-wrap gap-3">
                             <div>
-                                <h2 className="text-base font-semibold">Student Enrollments</h2>
-                                <p className="text-sm text-[--muted-foreground]">{enrollmentPagination?.totalItems ?? 0} total records</p>
+                                <h2 className="text-base font-semibold">{t("payments.studentEnrollments")}</h2>
+                                <p className="text-sm text-[--muted-foreground]">{enrollmentPagination?.totalItems ?? 0} {t("payments.totalRecords")}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Label className="text-sm whitespace-nowrap">Filter by status:</Label>
+                                <Label className="text-sm whitespace-nowrap">{t("payments.filterByStatus")}</Label>
                                 <FormCombobox
                                     items={paymentStatusOptions}
                                     value={enrollmentFilter}
                                     onValueChange={setEnrollmentFilter}
-                                    placeholder="Select status"
+                                    placeholder={t("payments.selectStatus")}
                                     renderItem={opt => opt.label}
                                     getItemValue={opt => opt.value}
                                     getItemLabel={opt => opt.label}
@@ -377,25 +373,25 @@ export default function PaymentsPage() {
                             </div>
                         </div>
                         {enrollmentsLoading
-                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                            : <DataTable data={enrollments} columns={enrollmentColumns} title="Enrollments" exportFilename="enrollments" />
+                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("payments.loading")}</div>
+                            : <DataTable data={enrollments} columns={enrollmentColumns} title={t("payments.enrollments")} exportFilename="enrollments" />
                         }
                     </div>
                 )}
             </main>
 
             {/* ── Add / Edit Payment Dialog ─────────────────────────── */}
-            <FormDialog className="w-200" open={open} onClose={() => setOpen(false)} title={editing ? "Edit Payment" : "Add Payment"}>
+            <FormDialog className="w-200" open={open} onClose={() => setOpen(false)} title={editing ? t("payments.editPayment") : t("payments.addPayment")}>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         {/* Student */}
                         <div className="col-span-2 md:col-span-1">
-                            <Label>Student <span className="text-red-500">*</span></Label>
+                            <Label>{t("payments.student")} <span className="text-red-500">*</span></Label>
                             <FormCombobox
                                 items={students}
                                 value={form.studentId}
                                 onValueChange={v => f("studentId", v)}
-                                placeholder="Select student"
+                                placeholder={t("payments.selectStudent")}
                                 renderItem={s => `${s.firstName} ${s.lastName} ${s.studentId ? `(${s.studentId})` : ""}`}
                                 getItemValue={s => s._id}
                                 getItemLabel={s => `${s.firstName} ${s.lastName} ${s.studentId ? `(${s.studentId})` : ""}`}
@@ -404,12 +400,12 @@ export default function PaymentsPage() {
 
                         {/* Course */}
                         <div className="col-span-2 md:col-span-1">
-                            <Label>Course <span className="text-red-500">*</span></Label>
+                            <Label>{t("payments.course")} <span className="text-red-500">*</span></Label>
                             <FormCombobox
                                 items={courses}
                                 value={form.courseId}
                                 onValueChange={v => f("courseId", v)}
-                                placeholder="Select course"
+                                placeholder={t("payments.selectCourse")}
                                 renderItem={c => `${c.name} (${c.code})`}
                                 getItemValue={c => c._id}
                                 getItemLabel={c => `${c.name} (${c.code})`}
@@ -418,18 +414,18 @@ export default function PaymentsPage() {
 
                         {/* Amount */}
                         <div>
-                            <Label>Amount <span className="text-red-500">*</span></Label>
+                            <Label>{t("payments.amount")} <span className="text-red-500">*</span></Label>
                             <Input type="number" value={form.amount} onChange={e => f("amount", e.target.value)} required min={0} />
                         </div>
 
                         {/* Payment Type */}
                         <div>
-                            <Label>Payment Type</Label>
+                            <Label>{t("payments.paymentType")}</Label>
                             <FormCombobox
                                 items={paymentTypeOptions}
                                 value={form.paymentType}
                                 onValueChange={v => f("paymentType", v)}
-                                placeholder="Select payment type"
+                                placeholder={t("payments.selectPaymentType")}
                                 renderItem={o => o.label}
                                 getItemValue={o => o.value}
                                 getItemLabel={o => o.label}
@@ -439,12 +435,12 @@ export default function PaymentsPage() {
 
                         {/* Payment Method */}
                         <div>
-                            <Label>Payment Method</Label>
+                            <Label>{t("payments.paymentMethod")}</Label>
                             <FormCombobox
                                 items={paymentMethodOptions}
                                 value={form.paymentMethod}
                                 onValueChange={v => f("paymentMethod", v)}
-                                placeholder="Select payment method"
+                                placeholder={t("payments.selectPaymentMethod")}
                                 renderItem={o => o.label}
                                 getItemValue={o => o.value}
                                 getItemLabel={o => o.label}
@@ -454,12 +450,12 @@ export default function PaymentsPage() {
 
                         {/* Status */}
                         <div>
-                            <Label>Payment Status</Label>
+                            <Label>{t("payments.paymentStatus")}</Label>
                             <FormCombobox
                                 items={paymentStatusOptions}
                                 value={form.paymentStatus}
                                 onValueChange={v => f("paymentStatus", v)}
-                                placeholder="Select payment status"
+                                placeholder={t("payments.selectPaymentStatus")}
                                 renderItem={o => o.label}
                                 getItemValue={o => o.value}
                                 getItemLabel={o => o.label}
@@ -468,45 +464,45 @@ export default function PaymentsPage() {
 
                         {/* Transaction ID */}
                         <div>
-                            <Label>Transaction ID</Label>
-                            <Input value={form.transactionId} onChange={e => f("transactionId", e.target.value)} placeholder="Optional" />
+                            <Label>{t("payments.transactionId")}</Label>
+                            <Input value={form.transactionId} onChange={e => f("transactionId", e.target.value)} placeholder={t("payments.optional")} />
                         </div>
 
                         {/* Due Date */}
                         <div>
-                            <Label>Due Date <span className="text-red-500">*</span></Label>
+                            <Label>{t("payments.dueDate")} <span className="text-red-500">*</span></Label>
                             <Input type="date" value={form.dueDate} onChange={e => f("dueDate", e.target.value)} required />
                         </div>
 
                         {/* Paid Date */}
                         <div>
-                            <Label>Paid Date</Label>
+                            <Label>{t("payments.paidDate")}</Label>
                             <Input type="date" value={form.paidDate} onChange={e => f("paidDate", e.target.value)} />
                         </div>
 
                         {/* Academic Year */}
                         <div>
-                            <Label>Academic Year <span className="text-red-500">*</span></Label>
+                            <Label>{t("payments.academicYear")} <span className="text-red-500">*</span></Label>
                             <Input value={form.academicYear} onChange={e => f("academicYear", e.target.value)} placeholder="e.g. 2024-2025" required />
                         </div>
 
                         {/* Semester */}
                         <div>
-                            <Label>Semester <span className="text-red-500">*</span></Label>
+                            <Label>{t("payments.semester")} <span className="text-red-500">*</span></Label>
                             <Input value={form.semester} onChange={e => f("semester", e.target.value)} placeholder="e.g. Spring 2025" required />
                         </div>
 
                         {/* Remarks */}
                         <div className="col-span-2">
-                            <Label>Remarks</Label>
-                            <Input value={form.remarks} onChange={e => f("remarks", e.target.value)} placeholder="Optional notes" />
+                            <Label>{t("payments.remarks")}</Label>
+                            <Input value={form.remarks} onChange={e => f("remarks", e.target.value)} placeholder={t("payments.optionalNotes")} />
                         </div>
                     </div>
 
                     <div className="flex justify-end gap-2 pt-1">
-                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>
+                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>{t("common.operations.cancel")}</Button>
                         <Button size="sm" type="submit" disabled={busy || !form.studentId || !form.courseId}>
-                            {busy ? "Saving…" : editing ? "Update" : "Create"}
+                            {busy ? t("common.operations.saving") : editing ? t("common.operations.update") : t("common.operations.create")}
                         </Button>
                     </div>
                 </form>
@@ -519,7 +515,7 @@ export default function PaymentsPage() {
                 open={!!confirm
                 } onClose={() => setConfirm(null)}
                 onConfirm={handleDelete} loading={busy}
-                message="Delete this payment record? This action cannot be undone."
+                message={t("payments.deleteConfirmMessage")}
             />
         </>
     );

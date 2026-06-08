@@ -17,6 +17,7 @@ import { Notice } from "@/types/viewModels";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type TF = {
     title: string;
@@ -32,17 +33,8 @@ type TF = {
 };
 const blank: TF = { title: "", content: "", category: "general", targetAudience: ["all"], publishDate: "", expiryDate: "", priority: "medium", status: "draft", createdBy: "", createdByModel: "Employee" };
 
-const dateFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
-    { key: "publishDate", label: "Publish Date", type: "date", required: false },
-    { key: "expiryDate", label: "Expiry Date", type: "date", required: false },
-];
-
-const categoryOptions = [{ value: "general", label: "General" }, { value: "academic", label: "Academic" }, { value: "exam", label: "Exam" }, { value: "event", label: "Event" }, { value: "holiday", label: "Holiday" }, { value: "urgent", label: "Urgent" }];
-const priorityOptions = [{ value: "low", label: "Low" }, { value: "medium", label: "Medium" }, { value: "high", label: "High" }];
-const statusOptions = [{ value: "draft", label: "Draft" }, { value: "published", label: "Published" }, { value: "archived", label: "Archived" }];
-const targetAudienceOptions = [{ value: "all", label: "All" }, { value: "student", label: "Students" }, { value: "parent", label: "Parents" }, { value: "teacher", label: "Teachers" }, { value: "employee", label: "Employees" }];
-
 export default function NoticesPage() {
+    const { t } = useTranslation();
     const { notices, loading, pagination, createNotice, updateNotice, deleteNotice } = useNotices();
     const { user } = useAuth();
     const [open, setOpen] = useState(false);
@@ -51,6 +43,16 @@ export default function NoticesPage() {
     const [confirm, setConfirm] = useState<Notice | null>(null);
     const [busy, setBusy] = useState(false);
     const f = (k: keyof TF, v: string) => setForm(p => ({ ...p, [k]: v }));
+
+    const dateFields: { key: keyof TF; label: string; type: string; required: boolean }[] = [
+        { key: "publishDate", label: t("notices.publishDate"), type: "date", required: false },
+        { key: "expiryDate", label: t("notices.expiryDate"), type: "date", required: false },
+    ];
+
+    const categoryOptions = [{ value: "general", label: t("notices.general") }, { value: "academic", label: t("notices.academic") }, { value: "exam", label: t("notices.exam") }, { value: "event", label: t("notices.event") }, { value: "holiday", label: t("notices.holiday") }, { value: "urgent", label: t("notices.urgent") }];
+    const priorityOptions = [{ value: "low", label: t("notices.low") }, { value: "medium", label: t("notices.medium") }, { value: "high", label: t("notices.high") }];
+    const statusOptions = [{ value: "draft", label: t("notices.draft") }, { value: "published", label: t("notices.publishedStatus") }, { value: "archived", label: t("notices.archived") }];
+    const targetAudienceOptions = [{ value: "all", label: t("notices.all") }, { value: "student", label: t("notices.students") }, { value: "parent", label: t("notices.parents") }, { value: "teacher", label: t("notices.teachers") }, { value: "employee", label: t("notices.employees") }];
 
     const toggleAudience = (value: "student" | "parent" | "teacher" | "employee" | "all") => {
         setForm(p => {
@@ -91,22 +93,22 @@ export default function NoticesPage() {
                     modifiedBy: user?.referenceId,
                     modifiedByModel: "Employee",
                 });
-                toast.success("Notice updated");
+                toast.success(t("notices.noticeUpdated"));
             }
-            else { await createNotice(payload); toast.success("Notice published"); }
+            else { await createNotice(payload); toast.success(t("notices.noticePublished")); }
             setOpen(false);
-        } catch { toast.error("Failed to save"); } finally { setBusy(false); }
+        } catch { toast.error(t("notices.failedToSave")); } finally { setBusy(false); }
     }
     async function handleDelete() {
         if (!confirm) return; setBusy(true);
-        try { await deleteNotice(confirm._id); toast.success("Notice deleted"); setConfirm(null); }
-        catch { toast.error("Failed to delete"); } finally { setBusy(false); }
+        try { await deleteNotice(confirm._id); toast.success(t("notices.noticeDeleted")); setConfirm(null); }
+        catch { toast.error(t("notices.failedToDelete")); } finally { setBusy(false); }
     }
 
     const columns: ColumnDef<Notice, unknown>[] = [
-        { id: "title", accessorKey: "title", header: "Title" },
+        { id: "title", accessorKey: "title", header: t("notices.title") },
         {
-            id: "content", accessorKey: "content", header: "Content",
+            id: "content", accessorKey: "content", header: t("notices.content"),
             cell: ({ getValue }) => (
                 <textarea
                     readOnly
@@ -116,64 +118,64 @@ export default function NoticesPage() {
                 />
             )
         },
-        { id: "category", accessorKey: "category", header: "Category" },
-        { id: "targetAudience", header: "Audience", accessorFn: r => Array.isArray(r.targetAudience) ? r.targetAudience.join(", ") : String(r.targetAudience) },
-        { id: "priority", header: "Priority", accessorKey: "priority", cell: ({ getValue }) => <Badge variant={String(getValue()) === "high" ? "destructive" : "default"}>{String(getValue())}</Badge> },
-        { id: "createdBy", header: "Created By", accessorFn: r => typeof r.createdBy === "string" ? r.createdBy : `${(r.createdBy as any)?.firstName ?? ""} ${(r.createdBy as any)?.lastName ?? ""}`.trim() || "—" },
+        { id: "category", accessorKey: "category", header: t("notices.category") },
+        { id: "targetAudience", header: t("notices.audience"), accessorFn: r => Array.isArray(r.targetAudience) ? r.targetAudience.join(", ") : String(r.targetAudience) },
+        { id: "priority", header: t("notices.priority"), accessorKey: "priority", cell: ({ getValue }) => <Badge variant={String(getValue()) === "high" ? "destructive" : "default"}>{String(getValue())}</Badge> },
+        { id: "createdBy", header: t("notices.createdBy"), accessorFn: r => typeof r.createdBy === "string" ? r.createdBy : `${(r.createdBy as any)?.firstName ?? ""} ${(r.createdBy as any)?.lastName ?? ""}`.trim() || "—" },
         {
-            id: "modifiedBy", header: "Modified By", accessorFn: r => {
+            id: "modifiedBy", header: t("notices.modifiedBy"), accessorFn: r => {
                 if (!r.modifiedBy) return "—";
                 if (typeof r.modifiedBy === "object") return `${(r.modifiedBy as any).firstName ?? ""} ${(r.modifiedBy as any).lastName ?? ""}`.trim() || "—";
                 return r.modifiedBy;
             }
         },
-        { id: "publishDate", header: "Published", accessorFn: r => r.publishDate ? formatDate(r.publishDate) : "—" },
-        { id: "expiryDate", header: "Expires", accessorFn: r => r.expiryDate ? formatDate(r.expiryDate) : "—" },
-        { id: "status", header: "Status", accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "published" ? "default" : "secondary"}>{String(getValue())}</Badge> },
+        { id: "publishDate", header: t("notices.published"), accessorFn: r => r.publishDate ? formatDate(r.publishDate) : "—" },
+        { id: "expiryDate", header: t("notices.expires"), accessorFn: r => r.expiryDate ? formatDate(r.expiryDate) : "—" },
+        { id: "status", header: t("notices.status"), accessorKey: "status", cell: ({ getValue }) => <Badge variant={String(getValue()) === "published" ? "default" : "secondary"}>{String(getValue())}</Badge> },
         { id: "actions", header: "", cell: ({ row: { original: r } }) => (<div className="flex items-center gap-1"><Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil size={13} /></Button><Button variant="ghost" size="icon" className="text-[--danger]" onClick={() => setConfirm(r)}><Trash2 size={13} /></Button></div>) },
     ];
 
     return (
         <>
-            <Header title="Notices" />
+            <Header title={t("common.pages.notices")} />
             <main className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                    <div><h2 className="text-base font-semibold">All Notices</h2><p className="text-sm text-[--muted-foreground]">{pagination?.totalItems ?? 0} total</p></div>
-                    <Button onClick={openAdd}><Plus size={15} className="mr-1" />Post Notice</Button>
+                    <div><h2 className="text-base font-semibold">{t("notices.allNotices")}</h2><p className="text-sm text-[--muted-foreground]">{pagination?.totalItems ?? 0} {t("common.fields.total")}</p></div>
+                    <Button onClick={openAdd}><Plus size={15} className="mr-1" />{t("notices.postNotice")}</Button>
                 </div>
-                {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                    : <DataTable data={notices} columns={columns} title="Notices" exportFilename="notices" />}
+                {loading ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("common.operations.loading")}</div>
+                    : <DataTable data={notices} columns={columns} title={t("common.pages.notices")} exportFilename="notices" />}
             </main>
-            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? "Edit Notice" : "Post Notice"}>
+            <FormDialog open={open} onClose={() => setOpen(false)} title={editing ? t("notices.editNotice") : t("notices.postNotice")}>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                        <div className="col-span-2"><Label>Title *</Label><Input value={form.title} onChange={e => f("title", e.target.value)} required /></div>
+                        <div className="col-span-2"><Label>{t("notices.title")} *</Label><Input value={form.title} onChange={e => f("title", e.target.value)} required /></div>
                         <div>
-                            <Label>Category</Label>
+                            <Label>{t("notices.category")}</Label>
                             <FormCombobox
                                 items={categoryOptions}
                                 value={form.category}
                                 onValueChange={v => f("category", v)}
-                                placeholder="Select category"
+                                placeholder={t("notices.selectCategory")}
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
                                 getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div>
-                            <Label>Priority</Label>
+                            <Label>{t("notices.priority")}</Label>
                             <FormCombobox
                                 items={priorityOptions}
                                 value={form.priority}
                                 onValueChange={v => f("priority", v)}
-                                placeholder="Select priority"
+                                placeholder={t("notices.selectPriority")}
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
                                 getItemLabel={opt => opt.label}
                             />
                         </div>
                         <div className="col-span-2">
-                            <Label>Target Audience *</Label>
+                            <Label>{t("notices.targetAudience")} *</Label>
                             <div className="flex flex-wrap gap-4 mt-2">
                                 {targetAudienceOptions.map(opt => (
                                     <div key={opt.value} className="flex items-center space-x-2">
@@ -190,12 +192,12 @@ export default function NoticesPage() {
                             </div>
                         </div>
                         <div>
-                            <Label>Status</Label>
+                            <Label>{t("notices.status")}</Label>
                             <FormCombobox
                                 items={statusOptions}
                                 value={form.status}
                                 onValueChange={v => f("status", v)}
-                                placeholder="Select status"
+                                placeholder={t("notices.selectStatus")}
                                 renderItem={opt => opt.label}
                                 getItemValue={opt => opt.value}
                                 getItemLabel={opt => opt.label}
@@ -207,16 +209,16 @@ export default function NoticesPage() {
                                 <Input type={field.type} value={form[field.key] as string} onChange={e => f(field.key, e.target.value)} />
                             </div>
                         ))}
-                        <div className="col-span-2"><Label>Content *</Label><textarea className="flex min-h-20 w-full rounded border border-[--border] bg-[--card] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--ring]" value={form.content} onChange={e => f("content", e.target.value)} required /></div>
+                        <div className="col-span-2"><Label>{t("notices.content")} *</Label><textarea className="flex min-h-20 w-full rounded border border-[--border] bg-[--card] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[--ring]" value={form.content} onChange={e => f("content", e.target.value)} required /></div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button size="sm" type="submit" disabled={busy}>{busy ? "Saving…" : editing ? "Update" : "Publish"}</Button>
+                        <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>{t("common.operations.cancel")}</Button>
+                        <Button size="sm" type="submit" disabled={busy}>{busy ? t("common.operations.saving") : editing ? t("common.operations.update") : t("notices.postNotice")}</Button>
                     </div>
                 </form>
             </FormDialog>
             <ConfirmDialog open={!!confirm} onClose={() => setConfirm(null)} onConfirm={handleDelete} loading={busy}
-                message={`Delete notice "${confirm?.title}"? This cannot be undone.`} />
+                message={t("notices.deleteConfirmMessage", { title: confirm?.title })} />
         </>
     );
 }

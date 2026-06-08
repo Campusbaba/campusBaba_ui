@@ -13,6 +13,7 @@ import { usePayments } from "@/hooks/usePayments";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -21,6 +22,7 @@ export default function ProfitExpensePage() {
     const { expenses } = useExpenses();
     const { payments } = usePayments();
     const [year, setYear] = useState(new Date().getFullYear());
+    const { t } = useTranslation();
 
     const chartData = useMemo(() => {
         return MONTHS.map((month, i) => {
@@ -48,10 +50,10 @@ export default function ProfitExpensePage() {
 
     type PERow = typeof chartData[0];
     const peColumns: ColumnDef<PERow, unknown>[] = [
-        { accessorKey: "month", header: "Month" },
-        { accessorKey: "income", header: "Income (৳)", cell: ({ getValue }) => <span className="text-emerald-400">৳{(getValue() as number).toLocaleString()}</span> },
-        { accessorKey: "expense", header: "Expense (৳)", cell: ({ getValue }) => <span className="text-rose-400">৳{(getValue() as number).toLocaleString()}</span> },
-        { accessorKey: "profit", header: "Net Profit (৳)", cell: ({ getValue }) => { const v = getValue() as number; return <span className={v >= 0 ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>৳{v.toLocaleString()}</span>; } },
+        { accessorKey: "month", header: t("reports.month") },
+        { accessorKey: "income", header: t("reports.incomeTaka"), cell: ({ getValue }) => <span className="text-emerald-400">৳{(getValue() as number).toLocaleString()}</span> },
+        { accessorKey: "expense", header: t("reports.expenseTaka"), cell: ({ getValue }) => <span className="text-rose-400">৳{(getValue() as number).toLocaleString()}</span> },
+        { accessorKey: "profit", header: t("reports.netProfitTaka"), cell: ({ getValue }) => { const v = getValue() as number; return <span className={v >= 0 ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>৳{v.toLocaleString()}</span>; } },
     ];
 
     const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
@@ -64,8 +66,8 @@ export default function ProfitExpensePage() {
                     <ArrowLeft size={16} />
                 </Button>
                 <div>
-                    <h1 className="text-xl font-bold text-[--foreground]">Profit / Expense Report</h1>
-                    <p className="text-xs text-[--muted-foreground]">Annual income vs expense comparison</p>
+                    <h1 className="text-xl font-bold text-[--foreground]">{t("reports.profitExpenseReportTitle")}</h1>
+                    <p className="text-xs text-[--muted-foreground]">{t("reports.annualComparison")}</p>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
                     <select
@@ -80,15 +82,15 @@ export default function ProfitExpensePage() {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <ReportStatCard title="Total Income" value={`৳${totalIncome.toLocaleString()}`} color="text-emerald-400" />
-                <ReportStatCard title="Total Expense" value={`৳${totalExpense.toLocaleString()}`} color="text-rose-400" />
+                <ReportStatCard title={t("reports.totalIncome")} value={`৳${totalIncome.toLocaleString()}`} color="text-emerald-400" />
+                <ReportStatCard title={t("reports.totalExpense")} value={`৳${totalExpense.toLocaleString()}`} color="text-rose-400" />
                 <ReportStatCard
-                    title="Net Profit"
+                    title={t("reports.netProfit")}
                     value={`৳${netProfit.toLocaleString()}`}
                     color={netProfit >= 0 ? "text-emerald-400" : "text-rose-400"}
                 />
                 <ReportStatCard
-                    title="Profit Margin"
+                    title={t("reports.profitMargin")}
                     value={totalIncome ? `${((netProfit / totalIncome) * 100).toFixed(1)}%` : "—"}
                 />
             </div>
@@ -96,7 +98,7 @@ export default function ProfitExpensePage() {
             {/* Charts */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <div className="card p-4">
-                    <h3 className="text-sm font-semibold mb-4">Income vs Expense</h3>
+                    <h3 className="text-sm font-semibold mb-4">{t("reports.incomeVsExpense")}</h3>
                     <ResponsiveContainer width="100%" height={280}>
                         <BarChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -104,13 +106,13 @@ export default function ProfitExpensePage() {
                             <YAxis tick={{ fontSize: 11 }} />
                             <Tooltip formatter={(v: any) => `৳${(v ?? 0).toLocaleString()}`} />
                             <Legend />
-                            <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} name="Income" />
-                            <Bar dataKey="expense" fill="#ef4444" radius={[4, 4, 0, 0]} name="Expense" />
+                            <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} name={t("reports.incomeLabel")} />
+                            <Bar dataKey="expense" fill="#ef4444" radius={[4, 4, 0, 0]} name={t("reports.expenseLabel")} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
                 <div className="card p-4">
-                    <h3 className="text-sm font-semibold mb-4">Net Profit Trend</h3>
+                    <h3 className="text-sm font-semibold mb-4">{t("reports.netProfitTrend")}</h3>
                     <ResponsiveContainer width="100%" height={280}>
                         <LineChart data={chartData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -123,7 +125,7 @@ export default function ProfitExpensePage() {
                                 stroke="#6366f1"
                                 strokeWidth={2}
                                 dot={{ r: 4 }}
-                                name="Net Profit"
+                                name={t("reports.netProfit")}
                             />
                         </LineChart>
                     </ResponsiveContainer>
@@ -133,7 +135,7 @@ export default function ProfitExpensePage() {
             <DataTable
                 data={chartData}
                 columns={peColumns}
-                title="Monthly Breakdown"
+                title={t("reports.monthlyBreakdown")}
                 exportFilename={`profit_expense_${year}`}
                 pageSize={12}
             />
