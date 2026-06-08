@@ -18,17 +18,14 @@ import { Attendance, Student } from "@/types/viewModels";
 import { ClipboardList, History, Pencil, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
-const statusOptions = [
-    { value: "present", label: "Present" },
-    { value: "absent", label: "Absent" },
-    { value: "late", label: "Late" },
-    { value: "excused", label: "Excused" },
-];
+const statusValues = ["present", "absent", "late", "excused"] as const;
 
 type AttendanceMark = "present" | "absent" | "late" | "excused";
 
 export default function AttendancePage() {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { attendances, loading: histLoading, fetchAttendances, createAttendance, updateAttendance, deleteAttendance, fetchTodayAttendance: fetchTodayAtt } = useAttendance();
     const { classRooms, loading: crLoading } = useClassRooms();
@@ -99,7 +96,7 @@ export default function AttendancePage() {
                 remarks: editRemarks || undefined,
                 date: editDate,
             } as Partial<Attendance>);
-            toast.success("Attendance updated");
+            toast.success(t("attendance.attendanceUpdated"));
             setEditingRecord(null);
             // Refresh history
             const params: Record<string, unknown> = { limit: 200 };
@@ -110,7 +107,7 @@ export default function AttendancePage() {
             if (historyClassRoomId !== "all") params.classRoomId = historyClassRoomId;
             fetchAttendances(params);
         } catch {
-            toast.error("Failed to update attendance");
+            toast.error(t("attendance.failedToUpdate"));
         } finally {
             setBusy(false);
         }
@@ -121,7 +118,7 @@ export default function AttendancePage() {
         setBusy(true);
         try {
             await deleteAttendance(deletingRecord._id);
-            toast.success("Attendance record deleted");
+            toast.success(t("attendance.recordDeleted"));
             setDeletingRecord(null);
             const params: Record<string, unknown> = { limit: 200 };
             if (historyDate) {
@@ -131,7 +128,7 @@ export default function AttendancePage() {
             if (historyClassRoomId !== "all") params.classRoomId = historyClassRoomId;
             fetchAttendances(params);
         } catch {
-            toast.error("Failed to delete record");
+            toast.error(t("attendance.failedToDelete"));
         } finally {
             setBusy(false);
         }
@@ -150,9 +147,9 @@ export default function AttendancePage() {
                 ...(user ? { markedBy: user.role } : {}),
             });
             setTodayAttMap(prev => ({ ...prev, [s._id]: status }));
-            toast.success(`${s.firstName} ${s.lastName} marked ${status}`);
+            toast.success(t("attendance.markedStatus", { name: `${s.firstName} ${s.lastName}`, status: t(`attendance.${status}`) }));
         } catch {
-            toast.error(`Failed to mark ${s.firstName} ${s.lastName}`);
+            toast.error(t("attendance.failedToMark", { name: `${s.firstName} ${s.lastName}` }));
         } finally {
             setBusy(false);
         }
@@ -177,34 +174,36 @@ export default function AttendancePage() {
             if (attendanceDate === todayStr) {
                 setTodayAttMap(prev => ({ ...prev, [markingStudent._id]: markStatus }));
             }
-            toast.success(`Attendance saved for ${markingStudent.firstName} ${markingStudent.lastName}`);
+            toast.success(t("attendance.attendanceSaved", { name: `${markingStudent.firstName} ${markingStudent.lastName}` }));
             setMarkingStudent(null);
         } catch {
-            toast.error("Failed to save attendance");
+            toast.error(t("attendance.failedToSaveAttendance"));
         } finally {
             setBusy(false);
         }
     }
 
+    const statusOptions = statusValues.map(v => ({ value: v, label: t(`attendance.${v}`) }));
+
     const studentColumns: ColumnDef<Student, unknown>[] = [
-        { id: "name", header: "Student", accessorFn: r => `${r.firstName} ${r.lastName}` },
-        { id: "studentId", accessorKey: "studentId", header: "Student ID" },
+        { id: "name", header: t("attendance.student"), accessorFn: r => `${r.firstName} ${r.lastName}` },
+        { id: "studentId", accessorKey: "studentId", header: t("attendance.studentId") },
         {
-            id: "classroom", header: "Classroom",
+            id: "classroom", header: t("attendance.classroom"),
             accessorFn: r => typeof r.classRoomId === "object"
                 ? (r.classRoomId as { name?: string }).name ?? "—"
                 : classRooms.find(cr => cr._id === r.classRoomId)?.name ?? "—"
         },
         {
-            id: "status", accessorKey: "status", header: "Status",
-            cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{String(getValue())}</Badge>
+            id: "status", accessorKey: "status", header: t("attendance.status"),
+            cell: ({ getValue }) => <Badge variant={String(getValue()) === "active" ? "default" : "secondary"}>{t(`attendance.${getValue()}`, String(getValue()))}</Badge>
         },
         {
-            id: "today", header: "Today",
+            id: "today", header: t("attendance.today"),
             cell: ({ row: { original: s } }) => {
                 const st = todayAttMap[s._id];
                 if (!st) return <span className="text-xs text-[--muted-foreground]">—</span>;
-                return <Badge variant={st === "present" ? "default" : "destructive"}>{st}</Badge>;
+                return <Badge variant={st === "present" ? "default" : "destructive"}>{t(`attendance.${st}`, st)}</Badge>;
             }
         },
         {
@@ -213,14 +212,14 @@ export default function AttendancePage() {
                 const current = todayAttMap[s._id];
                 return (
                     <div className="flex gap-1">
-                        <Button size="sm" variant={current === "present" ? "default" : "outline"} className={current === "present" ? "" : "text-green-600 border-green-600 hover:bg-green-50"} onClick={() => quickMark(s, "present")} title="Mark present for today">
+                        <Button size="sm" variant={current === "present" ? "default" : "outline"} className={current === "present" ? "" : "text-green-600 border-green-600 hover:bg-green-50"} onClick={() => quickMark(s, "present")} title={t("attendance.present")}>
                             ✓
                         </Button>
-                        <Button size="sm" variant={current === "absent" ? "destructive" : "outline"} className={current === "absent" ? "" : "text-red-600 border-red-600 hover:bg-red-50"} onClick={() => quickMark(s, "absent")} title="Mark absent for today">
+                        <Button size="sm" variant={current === "absent" ? "destructive" : "outline"} className={current === "absent" ? "" : "text-red-600 border-red-600 hover:bg-red-50"} onClick={() => quickMark(s, "absent")} title={t("attendance.absent")}>
                             ✗
                         </Button>
                         <Button size="sm" variant="outline" onClick={() => openMarkModal(s)}>
-                            <ClipboardList size={13} className="mr-1" /> Mark
+                            <ClipboardList size={13} className="mr-1" /> {t("attendance.mark")}
                         </Button>
                     </div>
                 );
@@ -230,7 +229,7 @@ export default function AttendancePage() {
 
     const historyColumns: ColumnDef<Attendance, unknown>[] = [
         {
-            id: "student", header: "Student",
+            id: "student", header: t("attendance.student"),
             accessorFn: r => {
                 const s = r.studentId;
                 return s && typeof s === "object"
@@ -239,24 +238,24 @@ export default function AttendancePage() {
             }
         },
         {
-            id: "class", header: "Classroom",
+            id: "class", header: t("attendance.classroom"),
             accessorFn: r => { const c = r.classRoomId; return typeof c === "object" ? (c as { name: string }).name : String(c); }
         },
-        { id: "date", header: "Date", accessorFn: r => formatDate(r.date) },
+        { id: "date", header: t("attendance.date"), accessorFn: r => formatDate(r.date) },
         {
-            id: "status", header: "Status", accessorKey: "status",
+            id: "status", header: t("attendance.status"), accessorKey: "status",
             cell: ({ getValue }) => (
-                <Badge variant={String(getValue()) === "present" ? "default" : "destructive"}>{String(getValue())}</Badge>
+                <Badge variant={String(getValue()) === "present" ? "default" : "destructive"}>{t(`attendance.${getValue()}`, String(getValue()))}</Badge>
             )
         },
-        { id: "remarks", accessorKey: "remarks", header: "Remarks" },
+        { id: "remarks", accessorKey: "remarks", header: t("attendance.remarks") },
         {
-            id: "markedBy", header: "Marked By",
+            id: "markedBy", header: t("attendance.markedBy"),
             accessorFn: r => {
-                const t = r.markedBy;
-                return typeof t === "object"
-                    ? `${(t as { firstName: string; lastName: string }).firstName} ${(t as { firstName: string; lastName: string }).lastName}`
-                    : String(t ?? "—");
+                const mb = r.markedBy;
+                return typeof mb === "object"
+                    ? `${(mb as { firstName: string; lastName: string }).firstName} ${(mb as { firstName: string; lastName: string }).lastName}`
+                    : String(mb ?? "—");
             }
         },
         {
@@ -264,10 +263,10 @@ export default function AttendancePage() {
             cell: ({ row: { original: r } }) => (
                 <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => openEditModal(r)}>
-                        <Pencil size={13} className="mr-1" /> Edit
+                        <Pencil size={13} className="mr-1" /> {t("common.operations.edit")}
                     </Button>
                     <Button size="sm" variant="destructive" onClick={() => setDeletingRecord(r)}>
-                        <Trash2 size={13} className="mr-1" /> Delete
+                        <Trash2 size={13} className="mr-1" /> {t("common.operations.delete")}
                     </Button>
                 </div>
             )
@@ -276,16 +275,16 @@ export default function AttendancePage() {
 
     return (
         <>
-            <Header title="Attendance" />
+            <Header title={t("attendance.title")} />
             <main className="p-5 space-y-4">
 
                 {/* Tabs */}
                 <div className="flex gap-2 border-b pb-3">
                     <Button variant={activeTab === "mark" ? "default" : "ghost"} size="sm" onClick={() => setActiveTab("mark")}>
-                        <ClipboardList size={14} className="mr-1" /> Mark Attendance
+                        <ClipboardList size={14} className="mr-1" /> {t("attendance.markAttendance")}
                     </Button>
                     <Button variant={activeTab === "history" ? "default" : "ghost"} size="sm" onClick={() => setActiveTab("history")}>
-                        <History size={14} className="mr-1" /> History
+                        <History size={14} className="mr-1" /> {t("attendance.history")}
                     </Button>
                 </div>
 
@@ -295,12 +294,12 @@ export default function AttendancePage() {
                         {/* Classroom Filter */}
                         <div className="flex flex-wrap items-end gap-4">
                             <div className="flex flex-col gap-1">
-                                <Label className="text-xs">Filter by Classroom</Label>
+                                <Label className="text-xs">{t("attendance.filterByClassroom")}</Label>
                                 <FormCombobox
                                     items={classRooms}
                                     value={selectedClassRoomId}
                                     onValueChange={setSelectedClassRoomId}
-                                    placeholder="Select classroom"
+                                    placeholder={t("attendance.selectClassroom")}
                                     renderItem={cr => cr.name}
                                     getItemValue={cr => cr._id}
                                     getItemLabel={cr => cr.name}
@@ -309,8 +308,8 @@ export default function AttendancePage() {
                         </div>
 
                         {crLoading || studLoading
-                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                            : <DataTable data={students} columns={studentColumns} title="Students" exportFilename="students" />
+                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("attendance.loading")}</div>
+                            : <DataTable data={students} columns={studentColumns} title={t("attendance.students")} exportFilename="students" />
                         }
                     </div>
                 )}
@@ -320,7 +319,7 @@ export default function AttendancePage() {
                     <div className="space-y-4">
                         <div className="flex flex-wrap items-end gap-4">
                             <div className="flex flex-col gap-1">
-                                <Label className="text-xs">Filter by Date</Label>
+                                <Label className="text-xs">{t("attendance.filterByDate")}</Label>
                                 <div className="flex items-center gap-2">
                                     <Input
                                         type="date"
@@ -329,28 +328,28 @@ export default function AttendancePage() {
                                         className="w-44"
                                     />
                                     {historyDate && (
-                                        <Button variant="ghost" size="sm" onClick={() => setHistoryDate("")}>Clear</Button>
+                                        <Button variant="ghost" size="sm" onClick={() => setHistoryDate("")}>{t("attendance.clear")}</Button>
                                     )}
                                 </div>
                             </div>
                             <div className="flex flex-col gap-1">
-                                <Label className="text-xs">Filter by Classroom</Label>
+                                <Label className="text-xs">{t("attendance.filterByClassroom")}</Label>
                                 <FormCombobox
                                     items={classRooms}
                                     value={historyClassRoomId}
                                     onValueChange={setHistoryClassRoomId}
-                                    placeholder="Select classroom"
+                                    placeholder={t("attendance.selectClassroom")}
                                     renderItem={cr => cr.name}
                                     getItemValue={cr => cr._id}
                                     getItemLabel={cr => cr.name}
                                 />
                             </div>
-                            <p className="text-sm text-[--muted-foreground] pb-1">{attendances.length} records</p>
+                            <p className="text-sm text-[--muted-foreground] pb-1">{t("attendance.records", { count: attendances.length })}</p>
                         </div>
 
                         {histLoading
-                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">Loading…</div>
-                            : <DataTable data={attendances} columns={historyColumns} title="Attendance History" exportFilename="attendance-history" />
+                            ? <div className="card p-10 text-center text-sm text-[--muted-foreground]">{t("attendance.loading")}</div>
+                            : <DataTable data={attendances} columns={historyColumns} title={t("attendance.attendanceHistory")} exportFilename="attendance-history" />
                         }
                     </div>
                 )}
@@ -361,13 +360,13 @@ export default function AttendancePage() {
                 open={!!deletingRecord}
                 onClose={() => setDeletingRecord(null)}
                 onConfirm={handleDeleteConfirm}
-                title="Delete Attendance Record"
+                title={t("attendance.deleteAttendance")}
                 message={deletingRecord
-                    ? `Are you sure you want to delete the attendance record for ${typeof deletingRecord.studentId === "object"
-                        ? `${(deletingRecord.studentId as { firstName: string; lastName: string }).firstName} ${(deletingRecord.studentId as { firstName: string; lastName: string }).lastName}`
-                        : "this student"}? This action cannot be undone.`
+                    ? (typeof deletingRecord.studentId === "object"
+                        ? t("attendance.deleteAttendanceConfirm", { name: `${(deletingRecord.studentId as { firstName: string; lastName: string }).firstName} ${(deletingRecord.studentId as { firstName: string; lastName: string }).lastName}` })
+                        : t("attendance.deleteAttendanceConfirmDefault"))
                     : ""}
-                confirmText="Delete"
+                confirmText={t("common.operations.delete")}
                 loading={busy}
             />
 
@@ -375,11 +374,13 @@ export default function AttendancePage() {
             <FormDialog
                 open={!!editingRecord}
                 onClose={() => setEditingRecord(null)}
-                title={editingRecord ? `Edit Attendance — ${typeof editingRecord.studentId === "object" ? `${(editingRecord.studentId as { firstName: string; lastName: string }).firstName} ${(editingRecord.studentId as { firstName: string; lastName: string }).lastName}` : "Record"}` : ""}
+                title={editingRecord
+                    ? t("attendance.editAttendanceTitle", { name: typeof editingRecord.studentId === "object" ? `${(editingRecord.studentId as { firstName: string; lastName: string }).firstName} ${(editingRecord.studentId as { firstName: string; lastName: string }).lastName}` : "Record" })
+                    : ""}
             >
                 <div className="p-6 space-y-4">
                     <div className="flex flex-col gap-1">
-                        <Label className="text-xs">Date *</Label>
+                        <Label className="text-xs">{t("attendance.date")} *</Label>
                         <Input
                             type="date"
                             value={editDate}
@@ -388,29 +389,29 @@ export default function AttendancePage() {
                         />
                     </div>
                     <div className="flex flex-col gap-1">
-                        <Label className="text-xs">Status *</Label>
+                        <Label className="text-xs">{t("attendance.status")} *</Label>
                         <FormCombobox
                             items={statusOptions}
                             value={editStatus}
                             onValueChange={v => setEditStatus(v as AttendanceMark)}
-                            placeholder="Select status"
+                            placeholder={t("common.operations.select")}
                             renderItem={opt => opt.label}
                             getItemValue={opt => opt.value}
                             getItemLabel={opt => opt.label}
                         />
                     </div>
                     <div className="flex flex-col gap-1">
-                        <Label className="text-xs">Remarks</Label>
+                        <Label className="text-xs">{t("attendance.remarks")}</Label>
                         <Input
-                            placeholder="Optional"
+                            placeholder={t("attendance.optional")}
                             value={editRemarks}
                             onChange={e => setEditRemarks(e.target.value)}
                         />
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" size="sm" onClick={() => setEditingRecord(null)}>Cancel</Button>
+                        <Button variant="outline" size="sm" onClick={() => setEditingRecord(null)}>{t("attendance.cancel")}</Button>
                         <Button size="sm" onClick={handleEditSubmit} disabled={busy}>
-                            {busy ? "Saving…" : "Save Changes"}
+                            {busy ? t("attendance.saving") : t("attendance.saveChanges")}
                         </Button>
                     </div>
                 </div>
@@ -420,11 +421,11 @@ export default function AttendancePage() {
             <FormDialog
                 open={!!markingStudent}
                 onClose={() => setMarkingStudent(null)}
-                title={markingStudent ? `Mark Attendance — ${markingStudent.firstName} ${markingStudent.lastName}` : ""}
+                title={markingStudent ? t("attendance.markAttendanceTitle", { name: `${markingStudent.firstName} ${markingStudent.lastName}` }) : ""}
             >
                 <div className="p-6 space-y-4">
                     <div className="flex flex-col gap-1">
-                        <Label className="text-xs">Date *</Label>
+                        <Label className="text-xs">{t("attendance.date")} *</Label>
                         <Input
                             type="date"
                             value={attendanceDate}
@@ -433,29 +434,29 @@ export default function AttendancePage() {
                         />
                     </div>
                     <div className="flex flex-col gap-1">
-                        <Label className="text-xs">Status *</Label>
+                        <Label className="text-xs">{t("attendance.status")} *</Label>
                         <FormCombobox
                             items={statusOptions}
                             value={markStatus}
                             onValueChange={v => setMarkStatus(v as AttendanceMark)}
-                            placeholder="Select status"
+                            placeholder={t("common.operations.select")}
                             renderItem={opt => opt.label}
                             getItemValue={opt => opt.value}
                             getItemLabel={opt => opt.label}
                         />
                     </div>
                     <div className="flex flex-col gap-1">
-                        <Label className="text-xs">Remarks</Label>
+                        <Label className="text-xs">{t("attendance.remarks")}</Label>
                         <Input
-                            placeholder="Optional"
+                            placeholder={t("attendance.optional")}
                             value={markRemarks}
                             onChange={e => setMarkRemarks(e.target.value)}
                         />
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <Button variant="outline" size="sm" onClick={() => setMarkingStudent(null)}>Cancel</Button>
+                        <Button variant="outline" size="sm" onClick={() => setMarkingStudent(null)}>{t("attendance.cancel")}</Button>
                         <Button size="sm" onClick={handleMarkSubmit} disabled={busy}>
-                            {busy ? "Saving…" : "Submit"}
+                            {busy ? t("attendance.saving") : t("attendance.submit")}
                         </Button>
                     </div>
                 </div>
