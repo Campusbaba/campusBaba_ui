@@ -50,7 +50,7 @@ const statusOptions: { value: MarkRow["status"]; label: string }[] = [
 export default function TeacherExamMarksPage() {
     const { t } = useTranslation();
     const { referenceId } = useAuth();
-    const { classRooms } = useClassRooms({}, true, referenceId);
+    const { classRooms } = useClassRooms({ teacherId: referenceId ?? undefined }, true);
     const { exams, fetchExamsByClassRooms } = useExams({}, false);
     const { marks, loading: marksLoading, fetchMarks, createMark, updateMark } = useExamMarks();
 

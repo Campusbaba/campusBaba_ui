@@ -33,7 +33,7 @@ export default function TeacherAttendancePage() {
     const { referenceId, user } = useAuth();
     const { attendances, loading: histLoading, fetchAttendances, createAttendance, fetchTodayAttendance: fetchTodayAtt } = useAttendance({}, false);
     const { students, fetchStudents, loading: studLoading } = useStudents({}, false);
-    const { classRooms: assignedClassRooms } = useClassRooms({}, true, referenceId ?? undefined);
+    const { classRooms: assignedClassRooms } = useClassRooms({ teacherId: referenceId ?? undefined }, true);
 
     const [activeTab, setActiveTab] = useState<"mark" | "history">("mark");
     const [selectedClassRoomId, setSelectedClassRoomId] = useState<string>("");

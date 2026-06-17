@@ -64,7 +64,7 @@ const statusOptions = [
 export default function TeacherExamsPage() {
     const { t } = useTranslation();
     const { referenceId } = useAuth();
-    const { classRooms, loading: classRoomsLoading } = useClassRooms({}, true, referenceId);
+    const { classRooms, loading: classRoomsLoading } = useClassRooms({ teacherId: referenceId ?? undefined }, true);
     const { exams, loading, fetchExamsByClassRooms, createExam, updateExam, deleteExam } = useExams({}, false);
 
     const [open, setOpen] = useState(false);
