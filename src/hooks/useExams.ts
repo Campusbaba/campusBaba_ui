@@ -1,61 +1,85 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import api from "@/lib/axios";
 import type { Exam, Pagination } from "@/types/viewModels";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useExams(initialParams = {}, autoFetch = true) {
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [exam, setExam] = useState<Exam | null>(null);
+  const [additionalLoading, setAdditionalLoading] = useState(false);
+  const [additionalExams, setAdditionalExams] = useState<Exam[] | null>(null);
 
-  const fetchExams = useCallback(
-    async (params: Record<string, unknown> = initialParams) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await api.get("/exams", {
-          params: { page: 1, limit: 20, ...params },
-        });
-        setExams(res.data.data);
-        setPagination(res.data.pagination ?? null);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
-      }
+  const listQuery = useQuery({
+    queryKey: ["exams", params],
+    queryFn: async () => {
+      const res = await api.get("/exams", {
+        params: { page: 1, limit: 20, ...params },
+      });
+      return { data: res.data.data as Exam[], pagination: res.data.pagination ?? null };
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+    enabled: autoFetch,
+  });
 
-  useEffect(() => {
-    if (autoFetch) {
-      fetchExams();
+  const fetchExams = useCallback(async (newParams?: Record<string, unknown>) => {
+    if (newParams) {
+      setParams(prev => ({ ...prev, ...newParams }));
+    } else {
+      await listQuery.refetch();
     }
-  }, [fetchExams, autoFetch]);
+  }, [listQuery]);
+
+  const fetchExam = useCallback(async (id: string) => {
+    const res = await api.get(`/exams/${id}`);
+    setExam(res.data.data);
+    return res.data.data as Exam;
+  }, []);
+
+  const createMutation = useMutation({
+    mutationFn: async (payload: Partial<Exam>) => {
+      const res = await api.post("/exams", payload);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exams"] });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, payload }: { id: string, payload: Partial<Exam> }) => {
+      const res = await api.put(`/exams/${id}`, payload);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exams"] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/exams/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exams"] });
+    }
+  });
 
   const createExam = async (payload: Partial<Exam>) => {
-    const res = await api.post("/exams", payload);
-    await fetchExams();
-    return res.data.data;
+    return await createMutation.mutateAsync(payload);
   };
 
   const updateExam = async (id: string, payload: Partial<Exam>) => {
-    const res = await api.put(`/exams/${id}`, payload);
-    await fetchExams();
-    return res.data.data;
+    return await updateMutation.mutateAsync({ id, payload });
   };
 
   const deleteExam = async (id: string) => {
-    await api.delete(`/exams/${id}`);
-    await fetchExams();
+    await deleteMutation.mutateAsync(id);
   };
 
   const fetchExamsByClassRooms = useCallback(
     async (classRoomIds: string[], params: Record<string, unknown> = {}) => {
-      setLoading(true);
-      setError(null);
+      setAdditionalLoading(true);
       try {
         const promises = classRoomIds.map((id) =>
           api.get(`/exams/classroom/${id}`, {
@@ -64,24 +88,26 @@ export function useExams(initialParams = {}, autoFetch = true) {
         );
         const results = await Promise.all(promises);
         const allExams = results.flatMap((res) => res.data.data);
-        setExams(allExams);
+        setAdditionalExams(allExams);
         return allExams;
       } catch (err) {
-        setError((err as Error).message);
+        setAdditionalExams([]);
         return [];
       } finally {
-        setLoading(false);
+        setAdditionalLoading(false);
       }
     },
     [],
   );
 
   return {
-    exams,
-    pagination,
-    loading,
-    error,
+    exams: additionalExams !== null ? additionalExams : (listQuery.data?.data || []),
+    exam,
+    pagination: listQuery.data?.pagination || null,
+    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || additionalLoading,
+    error: listQuery.error ? listQuery.error.message : null,
     fetchExams,
+    fetchExam,
     createExam,
     updateExam,
     deleteExam,

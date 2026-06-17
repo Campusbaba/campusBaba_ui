@@ -1,60 +1,84 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import api from "@/lib/axios";
 import type { Notice, Pagination } from "@/types/viewModels";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-export function useNotices(initialParams = {}) {
-  const [notices, setNotices] = useState<Notice[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function useNotices(initialParams = {}, autoFetch = true) {
+  const queryClient = useQueryClient();
+  const [params, setParams] = useState<Record<string, unknown>>(initialParams);
 
-  const fetchNotices = useCallback(
-    async (params: Record<string, unknown> = initialParams) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await api.get("/notices", {
-          params: { page: 1, limit: 20, ...params },
-        });
-        setNotices(res.data.data);
-        setPagination(res.data.pagination ?? null);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
-      }
+  const listQuery = useQuery({
+    queryKey: ["notices", params],
+    queryFn: async () => {
+      const res = await api.get("/notices", {
+        params: { page: 1, limit: 20, ...params },
+      });
+      return { data: res.data.data as Notice[], pagination: res.data.pagination ?? null };
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+    enabled: autoFetch,
+  });
 
-  useEffect(() => {
-    fetchNotices();
-  }, [fetchNotices]);
+  const fetchNotices = useCallback(async (newParams?: Record<string, unknown>) => {
+    if (newParams) {
+      setParams(prev => ({ ...prev, ...newParams }));
+    } else {
+      await listQuery.refetch();
+    }
+  }, [listQuery]);
+
+  const createMutation = useMutation({
+    mutationFn: async (payload: Partial<Notice>) => {
+      const res = await api.post("/notices", payload);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notices"] });
+      queryClient.invalidateQueries({ queryKey: ["activeNotices"] });
+      queryClient.invalidateQueries({ queryKey: ["teacherNotices"] });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, payload }: { id: string, payload: Partial<Notice> }) => {
+      const res = await api.put(`/notices/${id}`, payload);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notices"] });
+      queryClient.invalidateQueries({ queryKey: ["activeNotices"] });
+      queryClient.invalidateQueries({ queryKey: ["teacherNotices"] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/notices/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notices"] });
+      queryClient.invalidateQueries({ queryKey: ["activeNotices"] });
+      queryClient.invalidateQueries({ queryKey: ["teacherNotices"] });
+    }
+  });
 
   const createNotice = async (payload: Partial<Notice>) => {
-    const res = await api.post("/notices", payload);
-    await fetchNotices();
-    return res.data.data;
+    return await createMutation.mutateAsync(payload);
   };
 
   const updateNotice = async (id: string, payload: Partial<Notice>) => {
-    const res = await api.put(`/notices/${id}`, payload);
-    await fetchNotices();
-    return res.data.data;
+    return await updateMutation.mutateAsync({ id, payload });
   };
 
   const deleteNotice = async (id: string) => {
-    await api.delete(`/notices/${id}`);
-    await fetchNotices();
+    await deleteMutation.mutateAsync(id);
   };
 
   return {
-    notices,
-    pagination,
-    loading,
-    error,
+    notices: listQuery.data?.data || [],
+    pagination: listQuery.data?.pagination || null,
+    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    error: listQuery.error ? listQuery.error.message : null,
     fetchNotices,
     createNotice,
     updateNotice,
@@ -62,84 +86,100 @@ export function useNotices(initialParams = {}) {
   };
 }
 
-// ─── Active notices hook (for the bell/header) ────────────────────────────────
 export function useActiveNotices(targetAudience?: string) {
-  const [notices, setNotices] = useState<Notice[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const fetchActiveNotices = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await api.get("/notices/active", {
-        params: targetAudience ? { targetAudience } : {},
-      });
-      setNotices(res.data.data ?? []);
-    } catch {
-      // silently fail — bell shouldn't break the page
-    } finally {
-      setLoading(false);
-    }
-  }, [targetAudience]);
-
-  useEffect(() => {
-    fetchActiveNotices();
-  }, [fetchActiveNotices]);
-
-  return { notices, loading, refetch: fetchActiveNotices };
-}
-// ─── Teacher-scoped notices hook ─────────────────────────────────────────────
-export function useTeacherNotices(teacherId: string | null | undefined) {
-  const [notices, setNotices] = useState<Notice[]>([]);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchNotices = useCallback(
-    async (params: Record<string, unknown> = {}) => {
-      if (!teacherId) return;
-      setLoading(true);
-      setError(null);
+  const queryResult = useQuery({
+    queryKey: ["activeNotices", targetAudience],
+    queryFn: async () => {
       try {
-        const res = await api.get(`/notices/teacher/${teacherId}`, {
-          params: { page: 1, limit: 50, ...params },
+        const res = await api.get("/notices/active", {
+          params: targetAudience ? { targetAudience } : {},
         });
-        setNotices(res.data.data);
-        setPagination(res.data.pagination ?? null);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
+        return res.data.data as Notice[] ?? [];
+      } catch {
+        return [];
       }
     },
-    [teacherId],
-  );
+  });
 
-  useEffect(() => {
-    fetchNotices();
-  }, [fetchNotices]);
+  return { 
+    notices: queryResult.data || [], 
+    loading: queryResult.isPending || queryResult.isFetching, 
+    refetch: queryResult.refetch 
+  };
+}
+
+export function useTeacherNotices(teacherId: string | null | undefined) {
+  const queryClient = useQueryClient();
+  const [params, setParams] = useState<Record<string, unknown>>({});
+
+  const listQuery = useQuery({
+    queryKey: ["teacherNotices", teacherId, params],
+    queryFn: async () => {
+      if (!teacherId) return { data: [], pagination: null };
+      const res = await api.get(`/notices/teacher/${teacherId}`, {
+        params: { page: 1, limit: 50, ...params },
+      });
+      return { data: res.data.data as Notice[], pagination: res.data.pagination ?? null };
+    },
+    enabled: !!teacherId,
+  });
+
+  const fetchNotices = useCallback(async (newParams: Record<string, unknown> = {}) => {
+    setParams(newParams);
+  }, []);
+
+  const createMutation = useMutation({
+    mutationFn: async (payload: Partial<Notice>) => {
+      const res = await api.post("/notices", payload);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teacherNotices"] });
+      queryClient.invalidateQueries({ queryKey: ["notices"] });
+      queryClient.invalidateQueries({ queryKey: ["activeNotices"] });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, payload }: { id: string, payload: Partial<Notice> }) => {
+      const res = await api.put(`/notices/${id}`, payload);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teacherNotices"] });
+      queryClient.invalidateQueries({ queryKey: ["notices"] });
+      queryClient.invalidateQueries({ queryKey: ["activeNotices"] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/notices/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teacherNotices"] });
+      queryClient.invalidateQueries({ queryKey: ["notices"] });
+      queryClient.invalidateQueries({ queryKey: ["activeNotices"] });
+    }
+  });
 
   const createNotice = async (payload: Partial<Notice>) => {
-    const res = await api.post("/notices", payload);
-    await fetchNotices();
-    return res.data.data;
+    return await createMutation.mutateAsync(payload);
   };
 
   const updateNotice = async (id: string, payload: Partial<Notice>) => {
-    const res = await api.put(`/notices/${id}`, payload);
-    await fetchNotices();
-    return res.data.data;
+    return await updateMutation.mutateAsync({ id, payload });
   };
 
   const deleteNotice = async (id: string) => {
-    await api.delete(`/notices/${id}`);
-    await fetchNotices();
+    await deleteMutation.mutateAsync(id);
   };
 
   return {
-    notices,
-    pagination,
-    loading,
-    error,
+    notices: listQuery.data?.data || [],
+    pagination: listQuery.data?.pagination || null,
+    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    error: listQuery.error ? listQuery.error.message : null,
     fetchNotices,
     createNotice,
     updateNotice,

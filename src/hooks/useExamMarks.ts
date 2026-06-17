@@ -2,23 +2,27 @@
 import { useState, useCallback } from "react";
 import api from "@/lib/axios";
 import type { ExamMark } from "@/types/viewModels";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useExamMarks() {
-  const [marks, setMarks] = useState<ExamMark[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const [examId, setExamId] = useState<string | null>(null);
+  const [additionalLoading, setAdditionalLoading] = useState(false);
 
-  const fetchMarks = useCallback(async (examId: string) => {
-    setLoading(true);
-    try {
+  const listQuery = useQuery({
+    queryKey: ["examMarks", { examId }],
+    queryFn: async () => {
+      if (!examId) return [];
       const res = await api.get("/exams/marks", {
         params: { examId, limit: 200 },
       });
-      setMarks(res.data.data ?? []);
-    } catch {
-      setMarks([]);
-    } finally {
-      setLoading(false);
-    }
+      return (res.data.data ?? []) as ExamMark[];
+    },
+    enabled: !!examId,
+  });
+
+  const fetchMarks = useCallback(async (id: string) => {
+    setExamId(id);
   }, []);
 
   const createMark = async (payload: {
@@ -30,6 +34,7 @@ export function useExamMarks() {
     status?: string;
   }) => {
     const res = await api.post("/exams/marks", payload);
+    queryClient.invalidateQueries({ queryKey: ["examMarks"] });
     return res.data.data as ExamMark;
   };
 
@@ -43,16 +48,18 @@ export function useExamMarks() {
     }>,
   ) => {
     const res = await api.put(`/exams/marks/${id}`, payload);
+    queryClient.invalidateQueries({ queryKey: ["examMarks"] });
     return res.data.data as ExamMark;
   };
 
   const deleteMark = async (id: string) => {
     await api.delete(`/exams/marks/${id}`);
+    queryClient.invalidateQueries({ queryKey: ["examMarks"] });
   };
 
   const fetchMarksByClassRoom = useCallback(
     async (classRoomId: string, params: Record<string, unknown> = {}) => {
-      setLoading(true);
+      setAdditionalLoading(true);
       try {
         const res = await api.get(`/exams/marks/classroom/${classRoomId}`, {
           params: { page: 1, limit: 200, ...params },
@@ -61,7 +68,7 @@ export function useExamMarks() {
       } catch {
         return [];
       } finally {
-        setLoading(false);
+        setAdditionalLoading(false);
       }
     },
     [],
@@ -69,7 +76,7 @@ export function useExamMarks() {
 
   const fetchMarksByClassRooms = useCallback(
     async (classRoomIds: string[], params: Record<string, unknown> = {}) => {
-      setLoading(true);
+      setAdditionalLoading(true);
       try {
         const promises = classRoomIds.map((id) =>
           api.get(`/exams/marks/classroom/${id}`, {
@@ -78,36 +85,32 @@ export function useExamMarks() {
         );
         const results = await Promise.all(promises);
         const allMarks = results.flatMap((res) => res.data.data);
-        setMarks(allMarks);
-        return allMarks;
+        return allMarks as ExamMark[];
       } catch {
-        setMarks([]);
         return [];
       } finally {
-        setLoading(false);
+        setAdditionalLoading(false);
       }
     },
     [],
   );
 
   const fetchStudentExamResults = useCallback(async (studentId: string) => {
-    setLoading(true);
+    setAdditionalLoading(true);
     try {
       const res = await api.get(`/exams/marks/student/${studentId}`);
       const data: ExamMark[] = res.data.data ?? [];
-      setMarks(data);
       return data;
     } catch {
-      setMarks([]);
       return [];
     } finally {
-      setLoading(false);
+      setAdditionalLoading(false);
     }
   }, []);
 
   return {
-    marks,
-    loading,
+    marks: listQuery.data || [],
+    loading: listQuery.isPending || listQuery.isFetching || additionalLoading,
     fetchMarks,
     createMark,
     updateMark,

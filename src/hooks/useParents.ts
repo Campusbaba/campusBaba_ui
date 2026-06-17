@@ -1,56 +1,33 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import api from "@/lib/axios";
 import type { Parent, Student, Pagination } from "@/types/viewModels";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useParents(initialParams = {}, autoFetch = true) {
-  const [parents, setParents] = useState<Parent[]>([]);
+  const queryClient = useQueryClient();
+  const [params, setParams] = useState<Record<string, unknown>>(initialParams);
   const [children, setChildren] = useState<Student[]>([]);
   const [childrenLoading, setChildrenLoading] = useState(false);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchParents = useCallback(
-    async (params: Record<string, unknown> = initialParams) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await api.get("/parents", {
-          params: { page: 1, limit: 20, ...params },
-        });
-        setParents(res.data.data);
-        setPagination(res.data.pagination ?? null);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
-      }
+  const listQuery = useQuery({
+    queryKey: ["parents", params],
+    queryFn: async () => {
+      const res = await api.get("/parents", {
+        params: { page: 1, limit: 20, ...params },
+      });
+      return { data: res.data.data as Parent[], pagination: res.data.pagination ?? null };
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+    enabled: autoFetch,
+  });
 
-  useEffect(() => {
-    if (autoFetch) fetchParents();
-  }, [autoFetch, fetchParents]);
-
-  const createParent = async (payload: Partial<Parent>) => {
-    const res = await api.post("/parents", payload);
-    await fetchParents();
-    return res.data.data;
-  };
-
-  const updateParent = async (id: string, payload: Partial<Parent>) => {
-    const res = await api.put(`/parents/${id}`, payload);
-    await fetchParents();
-    return res.data.data;
-  };
-
-  const deleteParent = async (id: string) => {
-    await api.delete(`/parents/${id}`);
-    await fetchParents();
-  };
+  const fetchParents = useCallback(async (newParams?: Record<string, unknown>) => {
+    if (newParams) {
+      setParams(prev => ({ ...prev, ...newParams }));
+    } else {
+      await listQuery.refetch();
+    }
+  }, [listQuery]);
 
   const fetchChildren = useCallback(
     async (parentId: string): Promise<Student[]> => {
@@ -67,13 +44,54 @@ export function useParents(initialParams = {}, autoFetch = true) {
     [],
   );
 
+  const createMutation = useMutation({
+    mutationFn: async (payload: Partial<Parent>) => {
+      const res = await api.post("/parents", payload);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["parents"] });
+    }
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, payload }: { id: string, payload: Partial<Parent> }) => {
+      const res = await api.put(`/parents/${id}`, payload);
+      return res.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["parents"] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/parents/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["parents"] });
+    }
+  });
+
+  const createParent = async (payload: Partial<Parent>) => {
+    return await createMutation.mutateAsync(payload);
+  };
+
+  const updateParent = async (id: string, payload: Partial<Parent>) => {
+    return await updateMutation.mutateAsync({ id, payload });
+  };
+
+  const deleteParent = async (id: string) => {
+    await deleteMutation.mutateAsync(id);
+  };
+
   return {
-    parents,
+    parents: listQuery.data?.data || [],
     children,
     childrenLoading,
-    pagination,
-    loading,
-    error,
+    pagination: listQuery.data?.pagination || null,
+    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    error: listQuery.error ? listQuery.error.message : null,
     fetchParents,
     fetchChildren,
     createParent,
