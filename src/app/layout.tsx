@@ -4,6 +4,7 @@ import "./globals.css";
 import { CustomToast } from "@/components/reusable/CustomToast";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { I18nProvider } from "@/components/providers/I18nProvider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,10 +32,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <SessionProvider>
-          <I18nProvider>
-            {children}
-            <CustomToast />
-          </I18nProvider>
+          <QueryProvider>
+            <I18nProvider>
+              {children}
+              <CustomToast />
+            </I18nProvider>
+          </QueryProvider>
         </SessionProvider>
       </body>
     </html>
