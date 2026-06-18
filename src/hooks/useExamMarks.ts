@@ -8,6 +8,7 @@ export function useExamMarks() {
   const queryClient = useQueryClient();
   const [examId, setExamId] = useState<string | null>(null);
   const [additionalLoading, setAdditionalLoading] = useState(false);
+  const [studentMarks, setStudentMarks] = useState<ExamMark[] | null>(null);
 
   const listQuery = useQuery({
     queryKey: ["examMarks", { examId }],
@@ -100,8 +101,10 @@ export function useExamMarks() {
     try {
       const res = await api.get(`/exams/marks/student/${studentId}`);
       const data: ExamMark[] = res.data.data ?? [];
+      setStudentMarks(data);
       return data;
     } catch {
+      setStudentMarks([]);
       return [];
     } finally {
       setAdditionalLoading(false);
@@ -109,8 +112,8 @@ export function useExamMarks() {
   }, []);
 
   return {
-    marks: listQuery.data || [],
-    loading: listQuery.isPending || listQuery.isFetching || additionalLoading,
+    marks: studentMarks !== null ? studentMarks : (listQuery.data || []),
+    loading: (!!examId && listQuery.isPending) || listQuery.isFetching || additionalLoading,
     fetchMarks,
     createMark,
     updateMark,

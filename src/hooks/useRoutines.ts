@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export function useRoutines(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [additionalLoading, setAdditionalLoading] = useState(false);
   const [additionalRoutines, setAdditionalRoutines] = useState<Routine[] | null>(null);
@@ -19,16 +20,18 @@ export function useRoutines(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as Routine[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchRoutines = listQuery.refetch;
   const fetchRoutines = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await listQuery.refetch();
+      await refetchRoutines();
     }
-  }, [listQuery]);
+  }, [refetchRoutines]);
 
   const fetchRoutine = useCallback(async (id: string) => {
     const res = await api.get(`/routines/${id}`);
@@ -79,6 +82,7 @@ export function useRoutines(initialParams = {}, autoFetch = true) {
 
   const fetchRoutinesByClassRoom = useCallback(
     async (classRoomId: string): Promise<Record<string, Routine[]>> => {
+      setIsManualFetchEnabled(true);
       setAdditionalLoading(true);
       try {
         const res = await api.get(`/routines/classroom/${classRoomId}`);
@@ -107,7 +111,7 @@ export function useRoutines(initialParams = {}, autoFetch = true) {
     routines: additionalRoutines !== null ? additionalRoutines : (listQuery.data?.data || []),
     routine,
     pagination: listQuery.data?.pagination || null,
-    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || additionalLoading,
+    loading: ((autoFetch || isManualFetchEnabled) && listQuery.isPending) || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || additionalLoading,
     error: listQuery.error ? listQuery.error.message : null,
     fetchRoutines,
     fetchRoutine,

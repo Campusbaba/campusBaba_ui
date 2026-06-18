@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export function useNotices(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
 
   const listQuery = useQuery({
     queryKey: ["notices", params],
@@ -16,16 +17,18 @@ export function useNotices(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as Notice[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchNotices = listQuery.refetch;
   const fetchNotices = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await listQuery.refetch();
+      await refetchNotices();
     }
-  }, [listQuery]);
+  }, [refetchNotices]);
 
   const createMutation = useMutation({
     mutationFn: async (payload: Partial<Notice>) => {
@@ -77,7 +80,7 @@ export function useNotices(initialParams = {}, autoFetch = true) {
   return {
     notices: listQuery.data?.data || [],
     pagination: listQuery.data?.pagination || null,
-    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    loading: ((autoFetch || isManualFetchEnabled) && listQuery.isPending) || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
     error: listQuery.error ? listQuery.error.message : null,
     fetchNotices,
     createNotice,

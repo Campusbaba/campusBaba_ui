@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export function useEmployees(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
 
   const listQuery = useQuery({
@@ -17,16 +18,18 @@ export function useEmployees(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as Employee[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchEmployees = listQuery.refetch;
   const fetchEmployees = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await listQuery.refetch();
+      await refetchEmployees();
     }
-  }, [listQuery]);
+  }, [refetchEmployees]);
 
   const fetchEmployee = useCallback(async (id: string) => {
     const res = await api.get(`/employees/${id}`);
@@ -79,7 +82,7 @@ export function useEmployees(initialParams = {}, autoFetch = true) {
     employees: listQuery.data?.data || [],
     employee,
     pagination: listQuery.data?.pagination || null,
-    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    loading: ((autoFetch || isManualFetchEnabled) && listQuery.isPending) || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
     error: listQuery.error ? listQuery.error.message : null,
     fetchEmployees,
     fetchEmployee,

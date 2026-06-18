@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export function useParents(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
   const [children, setChildren] = useState<Student[]>([]);
   const [childrenLoading, setChildrenLoading] = useState(false);
 
@@ -18,16 +19,18 @@ export function useParents(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as Parent[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchParents = listQuery.refetch;
   const fetchParents = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await listQuery.refetch();
+      await refetchParents();
     }
-  }, [listQuery]);
+  }, [refetchParents]);
 
   const fetchChildren = useCallback(
     async (parentId: string): Promise<Student[]> => {
@@ -90,7 +93,7 @@ export function useParents(initialParams = {}, autoFetch = true) {
     children,
     childrenLoading,
     pagination: listQuery.data?.pagination || null,
-    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    loading: ((autoFetch || isManualFetchEnabled) && listQuery.isPending) || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
     error: listQuery.error ? listQuery.error.message : null,
     fetchParents,
     fetchChildren,

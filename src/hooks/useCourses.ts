@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export function useCourses(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
   const [course, setCourse] = useState<Course | null>(null);
 
   const listQuery = useQuery({
@@ -17,16 +18,18 @@ export function useCourses(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as Course[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchCourses = listQuery.refetch;
   const fetchCourses = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await listQuery.refetch();
+      await refetchCourses();
     }
-  }, [listQuery]);
+  }, [refetchCourses]);
 
   const fetchCourse = useCallback(async (id: string) => {
     const res = await api.get(`/courses/${id}`);
@@ -79,7 +82,7 @@ export function useCourses(initialParams = {}, autoFetch = true) {
     courses: listQuery.data?.data || [],
     course,
     pagination: listQuery.data?.pagination || null,
-    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    loading: ((autoFetch || isManualFetchEnabled) && listQuery.isPending) || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
     error: listQuery.error ? listQuery.error.message : null,
     fetchCourses,
     fetchCourse,

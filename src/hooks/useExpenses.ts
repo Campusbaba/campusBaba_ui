@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export function useExpenses(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
   const [expense, setExpense] = useState<Expense | null>(null);
 
   const listQuery = useQuery({
@@ -17,16 +18,18 @@ export function useExpenses(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as Expense[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchExpenses = listQuery.refetch;
   const fetchExpenses = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await listQuery.refetch();
+      await refetchExpenses();
     }
-  }, [listQuery]);
+  }, [refetchExpenses]);
 
   const fetchExpense = useCallback(async (id: string) => {
     const res = await api.get(`/expenses/${id}`);
@@ -79,7 +82,7 @@ export function useExpenses(initialParams = {}, autoFetch = true) {
     expenses: listQuery.data?.data || [],
     expense,
     pagination: listQuery.data?.pagination || null,
-    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    loading: ((autoFetch || isManualFetchEnabled) && listQuery.isPending) || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
     error: listQuery.error ? listQuery.error.message : null,
     fetchExpenses,
     fetchExpense,

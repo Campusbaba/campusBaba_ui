@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export function useExams(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
   const [exam, setExam] = useState<Exam | null>(null);
   const [additionalLoading, setAdditionalLoading] = useState(false);
   const [additionalExams, setAdditionalExams] = useState<Exam[] | null>(null);
@@ -19,16 +20,18 @@ export function useExams(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as Exam[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchExams = listQuery.refetch;
   const fetchExams = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await listQuery.refetch();
+      await refetchExams();
     }
-  }, [listQuery]);
+  }, [refetchExams]);
 
   const fetchExam = useCallback(async (id: string) => {
     const res = await api.get(`/exams/${id}`);
@@ -79,6 +82,7 @@ export function useExams(initialParams = {}, autoFetch = true) {
 
   const fetchExamsByClassRooms = useCallback(
     async (classRoomIds: string[], params: Record<string, unknown> = {}) => {
+      setIsManualFetchEnabled(true);
       setAdditionalLoading(true);
       try {
         const promises = classRoomIds.map((id) =>
@@ -104,7 +108,7 @@ export function useExams(initialParams = {}, autoFetch = true) {
     exams: additionalExams !== null ? additionalExams : (listQuery.data?.data || []),
     exam,
     pagination: listQuery.data?.pagination || null,
-    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || additionalLoading,
+    loading: ((autoFetch || isManualFetchEnabled) && listQuery.isPending) || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || additionalLoading,
     error: listQuery.error ? listQuery.error.message : null,
     fetchExams,
     fetchExam,

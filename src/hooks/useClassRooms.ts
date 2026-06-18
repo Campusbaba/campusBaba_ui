@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export function useClassRooms(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
   const [classRoom, setClassRoom] = useState<ClassRoom | null>(null);
 
   const listQuery = useQuery({
@@ -17,16 +18,18 @@ export function useClassRooms(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as ClassRoom[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchClassRooms = listQuery.refetch;
   const fetchClassRooms = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await listQuery.refetch();
+      await refetchClassRooms();
     }
-  }, [listQuery]);
+  }, [refetchClassRooms]);
 
   const fetchClassRoom = useCallback(async (id: string) => {
     const res = await api.get(`/classrooms/${id}`);
@@ -79,7 +82,7 @@ export function useClassRooms(initialParams = {}, autoFetch = true) {
     classRooms: listQuery.data?.data || [],
     classRoom,
     pagination: listQuery.data?.pagination || null,
-    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    loading: ((autoFetch || isManualFetchEnabled) && listQuery.isPending) || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
     error: listQuery.error ? listQuery.error.message : null,
     fetchClassRooms,
     fetchClassRoom,

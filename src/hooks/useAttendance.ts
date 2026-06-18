@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export function useAttendance(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
 
   const listQuery = useQuery({
     queryKey: ["attendances", params],
@@ -16,16 +17,18 @@ export function useAttendance(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as Attendance[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchAttendances = listQuery.refetch;
   const fetchAttendances = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await listQuery.refetch();
+      await refetchAttendances();
     }
-  }, [listQuery]);
+  }, [refetchAttendances]);
 
   const fetchTodayAttendance = useCallback(
     async (classRoomId?: string) => {
@@ -87,7 +90,7 @@ export function useAttendance(initialParams = {}, autoFetch = true) {
   return {
     attendances: listQuery.data?.data || [],
     pagination: listQuery.data?.pagination || null,
-    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    loading: ((autoFetch || isManualFetchEnabled) && listQuery.isPending) || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
     error: listQuery.error ? listQuery.error.message : null,
     fetchAttendances,
     fetchTodayAttendance,

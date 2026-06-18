@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export function useTeachers(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
   const [teacher, setTeacher] = useState<Teacher | null>(null);
 
   const listQuery = useQuery({
@@ -17,16 +18,18 @@ export function useTeachers(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as Teacher[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchTeachers = listQuery.refetch;
   const fetchTeachers = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await listQuery.refetch();
+      await refetchTeachers();
     }
-  }, [listQuery]);
+  }, [refetchTeachers]);
 
   const fetchTeacher = useCallback(async (id: string) => {
     const res = await api.get(`/teachers/${id}`);
@@ -79,7 +82,7 @@ export function useTeachers(initialParams = {}, autoFetch = true) {
     teachers: listQuery.data?.data || [],
     teacher,
     pagination: listQuery.data?.pagination || null,
-    loading: listQuery.isPending || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
+    loading: ((autoFetch || isManualFetchEnabled) && listQuery.isPending) || listQuery.isFetching || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending,
     error: listQuery.error ? listQuery.error.message : null,
     fetchTeachers,
     fetchTeacher,

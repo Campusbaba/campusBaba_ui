@@ -13,6 +13,7 @@ export interface PaymentStats {
 export function usePayments(initialParams = {}, autoFetch = true) {
   const queryClient = useQueryClient();
   const [params, setParams] = useState<Record<string, unknown>>(initialParams);
+  const [isManualFetchEnabled, setIsManualFetchEnabled] = useState(false);
   const [enrollmentParams, setEnrollmentParams] = useState<Record<string, unknown>>({});
   const [additionalLoading, setAdditionalLoading] = useState(false);
   const [studentPayments, setStudentPayments] = useState<Payment[] | null>(null);
@@ -25,7 +26,7 @@ export function usePayments(initialParams = {}, autoFetch = true) {
       });
       return { data: res.data.data as Payment[], pagination: res.data.pagination ?? null };
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
   const enrollmentsQuery = useQuery({
@@ -45,27 +46,32 @@ export function usePayments(initialParams = {}, autoFetch = true) {
       const res = await api.get("/payments/stats", { params });
       return res.data.data as PaymentStats;
     },
-    enabled: autoFetch,
+    enabled: autoFetch || isManualFetchEnabled,
   });
 
+  const refetchPayments = paymentsQuery.refetch;
   const fetchPayments = useCallback(async (newParams?: Record<string, unknown>) => {
+    setIsManualFetchEnabled(true);
     if (newParams) {
       setParams(prev => ({ ...prev, ...newParams }));
     } else {
-      await paymentsQuery.refetch();
+      await refetchPayments();
     }
-  }, [paymentsQuery]);
+  }, [refetchPayments]);
 
+  const refetchEnrollments = enrollmentsQuery.refetch;
   const fetchEnrollments = useCallback(async (newParams: Record<string, unknown> = {}) => {
     setEnrollmentParams(newParams);
-    await enrollmentsQuery.refetch();
-  }, [enrollmentsQuery]);
+    await refetchEnrollments();
+  }, [refetchEnrollments]);
 
+  const refetchStats = statsQuery.refetch;
   const fetchStats = useCallback(async () => {
-    await statsQuery.refetch();
-  }, [statsQuery]);
+    await refetchStats();
+  }, [refetchStats]);
 
   const fetchStudentPayments = useCallback(async (studentId: string) => {
+    setIsManualFetchEnabled(true);
     setAdditionalLoading(true);
     try {
       const res = await api.get(`/payments/student/${studentId}`);
@@ -166,7 +172,7 @@ export function usePayments(initialParams = {}, autoFetch = true) {
     stats: statsQuery.data || null,
     pagination: paymentsQuery.data?.pagination || null,
     enrollmentPagination: enrollmentsQuery.data?.pagination || null,
-    loading: paymentsQuery.isPending || paymentsQuery.isFetching || additionalLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || activateMutation.isPending,
+    loading: ((autoFetch || isManualFetchEnabled) && paymentsQuery.isPending) || paymentsQuery.isFetching || additionalLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || activateMutation.isPending,
     enrollmentsLoading: enrollmentsQuery.isPending || enrollmentsQuery.isFetching,
     error: paymentsQuery.error ? paymentsQuery.error.message : null,
     fetchPayments,
