@@ -320,8 +320,8 @@ export default function ExpensesPage() {
                                 getItemLabel={opt => opt.label}
                             />
                         </div>
-                        <div className="col-span-2"><Label>{t("expenses.description")}</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
-                        <div className="col-span-2"><Label>{t("common.fields.remarks")}</Label><Input value={form.remarks} onChange={e => f("remarks", e.target.value)} /></div>
+                        <div className="sm:col-span-2"><Label>{t("expenses.description")}</Label><Input value={form.description} onChange={e => f("description", e.target.value)} /></div>
+                        <div className="sm:col-span-2"><Label>{t("common.fields.remarks")}</Label><Input value={form.remarks} onChange={e => f("remarks", e.target.value)} /></div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" size="sm" type="button" onClick={() => setOpen(false)}>{t("common.operations.cancel")}</Button>
