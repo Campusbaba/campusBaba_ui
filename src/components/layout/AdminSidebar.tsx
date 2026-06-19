@@ -69,7 +69,8 @@ export function AdminSidebar() {
                         { labelKey: "sidebar.items.profitExpense", href: "/admin/reports/profit-expense", icon: TrendingDown },
                         { labelKey: "common.pages.income", href: "/admin/reports/income", icon: DollarSign },
                         { labelKey: "common.pages.enrollment", href: "/admin/reports/enrollment", icon: Users },
-                        { labelKey: "common.pages.projection", href: "/admin/reports/projection", icon: TrendingUp },
+                        { labelKey: "common.pages.examPerformance", href: "/admin/reports/exam-performance", icon: TrendingUp },
+                        { labelKey: "common.pages.attendanceAnalytics", href: "/admin/reports/attendance-analytics", icon: ClipboardCheck },
                     ],
                 },
             ]}

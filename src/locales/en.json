@@ -20,7 +20,9 @@
       "enrollment": "Enrollment Report",
       "income": "Income Report",
       "profitexpense": "Profit & Expense Report",
-      "projection": "Projection Report"
+      "projection": "Projection Report",
+      "examPerformance": "Exam Performance",
+      "attendanceAnalytics": "Attendance Analytics"
     },
     "operations": {
       "add": "Add",
@@ -95,6 +97,7 @@
       "reports": "Reports"
     },
     "items": {
+      "overview": "Overview",
       "myChildren": "My Children",
       "myRoutines": "My Routines",
       "classRooms": "Class Rooms",
@@ -745,7 +748,37 @@
     "percentOfTotal": "% of Total",
     "ofTotal": "of Total",
     "now": "Now",
-    "atGrowth": "at {{rate}}% growth"
+    "atGrowth": "at {{rate}}% growth",
+    "examPerformanceTitle": "Exam Performance Analytics",
+    "examPerformanceDesc": "Analyze student grades and passing trends",
+    "academicYearParam": "{{year}} Academic Year",
+    "overallAverageScore": "Overall Average Score",
+    "overallPassRate": "Overall Pass Rate",
+    "totalExamsConducted": "Total Exams Conducted",
+    "highestAchiever": "Highest Achiever",
+    "averageScoresOverTime": "Average Scores Over Time",
+    "averageScore": "Average Score",
+    "gradeDistribution": "Grade Distribution",
+    "gradeLabel": "Grade {{name}}",
+    "detailedExamBreakdown": "Detailed Exam Breakdown",
+    "examName": "Exam Name",
+    "passRate": "Pass Rate",
+    "highestScore": "Highest Score",
+    "attendanceAnalytics": "Attendance Analytics",
+    "attendanceAnalyticsDesc": "Track attendance rates and absence trends",
+    "averageAttendanceRate": "Average Attendance Rate",
+    "totalSchoolDays": "Total School Days",
+    "highestAttendanceMonth": "Highest Attendance Month",
+    "lowestAttendanceMonth": "Lowest Attendance Month",
+    "monthlyAttendanceTrends": "Monthly Attendance Trends",
+    "attendanceRate": "Attendance Rate",
+    "absenceReasons": "Absence Reasons",
+    "absencePercent": "Absence %",
+    "detailedAttendanceBreakdown": "Detailed Attendance Breakdown",
+    "totalDays": "Total Days",
+    "presentDays": "Present Days",
+    "excusedDays": "Excused Days",
+    "unexcusedDays": "Unexcused Days"
   },
   "studentPortal": {
     "dashboard": {
