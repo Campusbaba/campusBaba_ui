@@ -34,7 +34,6 @@ const COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444"];
 
 export default function ExamPerformancePage() {
     const { t } = useTranslation();
-    const { examMarks } = useExamMarks();
     const [year, setYear] = useState(new Date().getFullYear());
 
     // We use dummy aggregated data to show a professional dashboard
@@ -103,7 +102,7 @@ export default function ExamPerformancePage() {
                             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dx={-10} domain={[0, 100]} />
                             <Tooltip 
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                formatter={(value: number) => [`${value}%`, t("reports.averageScore")]}
+                                formatter={(value: any) => [`${value}%`, t("reports.averageScore")]}
                             />
                             <Area type="monotone" dataKey="avgScore" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorAvg)" />
                         </AreaChart>
@@ -130,7 +129,7 @@ export default function ExamPerformancePage() {
                             </Pie>
                             <Tooltip 
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                formatter={(value: number, name: string) => [value, t("reports.gradeLabel", { name })]}
+                                formatter={(value: any, name: any) => [value, t("reports.gradeLabel", { name })]}
                             />
                             <Legend verticalAlign="bottom" height={36} iconType="circle" />
                         </PieChart>

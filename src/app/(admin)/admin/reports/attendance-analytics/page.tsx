@@ -98,7 +98,7 @@ export default function AttendanceAnalyticsPage() {
                             <Tooltip 
                                 cursor={{ fill: '#f3f4f6' }}
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                formatter={(value: number) => `${value}`}
+                                formatter={(value: any) => `${value}`}
                             />
                             <Legend verticalAlign="top" height={36} iconType="circle" />
                             <Bar dataKey="present" name={t("reports.presentDays")} stackId="a" fill="#10b981" radius={[0, 0, 4, 4]} />
@@ -123,7 +123,7 @@ export default function AttendanceAnalyticsPage() {
                             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} domain={[70, 100]} />
                             <Tooltip 
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                formatter={(value: number) => [`${value}%`, t("reports.absencePercent")]}
+                                formatter={(value: any) => [`${value}%`, t("reports.absencePercent")]}
                             />
                             <Area type="monotone" dataKey="rate" stroke="#f97316" strokeWidth={3} fillOpacity={1} fill="url(#colorRate)" />
                         </AreaChart>

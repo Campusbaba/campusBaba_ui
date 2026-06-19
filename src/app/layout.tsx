@@ -19,6 +19,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CampusBaba — Your Campus Portal",
   description: "Manage students, teachers, attendance, exams, payments and more.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Schooler",
+  },
+};
+
+export const viewport = {
+  themeColor: "#4f46e5",
 };
 
 export default function RootLayout({
