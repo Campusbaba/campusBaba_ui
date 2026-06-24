@@ -26,21 +26,27 @@ interface DataTableProps<T> {
     exportFilename?: string;
 }
 
+function getCellValue<T>(row: T, col: ColumnDef<T, unknown>): string {
+    const key = (col as { accessorKey?: string }).accessorKey;
+    const fn = (col as { accessorFn?: (row: T) => unknown }).accessorFn;
+    let val: unknown;
+    if (fn) {
+        val = fn(row);
+    } else if (key) {
+        val = (row as Record<string, unknown>)[key];
+    } else {
+        return "";
+    }
+    if (val === null || val === undefined) return "";
+    if (typeof val === "object") return JSON.stringify(val);
+    return String(val);
+}
+
 function exportCSV<T>(data: T[], columns: ColumnDef<T, unknown>[], filename: string) {
-    const headers = columns
-        .filter((c) => c.id !== "actions")
-        .map((c) => (typeof c.header === "string" ? c.header : c.id ?? ""));
-    const rows = data.map((row) =>
-        columns
-            .filter((c) => c.id !== "actions")
-            .map((c) => {
-                const key = (c as { accessorKey?: string }).accessorKey;
-                if (!key) return "";
-                const val = (row as Record<string, unknown>)[key];
-                return typeof val === "object" ? JSON.stringify(val) : String(val ?? "");
-            })
-    );
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(",")).join("\n");
+    const exportCols = columns.filter((c) => c.id !== "actions");
+    const headers = exportCols.map((c) => (typeof c.header === "string" ? c.header : c.id ?? ""));
+    const rows = data.map((row) => exportCols.map((c) => getCellValue(row, c)));
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -54,37 +60,17 @@ function exportPDF<T>(data: T[], columns: ColumnDef<T, unknown>[], filename: str
     const doc = new jsPDF({ orientation: "landscape" });
     doc.setFontSize(14);
     doc.text(title, 14, 15);
-    const head = columns
-        .filter((c) => c.id !== "actions")
-        .map((c) => (typeof c.header === "string" ? c.header : c.id ?? ""));
-    const body = data.map((row) =>
-        columns
-            .filter((c) => c.id !== "actions")
-            .map((c) => {
-                const key = (c as { accessorKey?: string }).accessorKey;
-                if (!key) return "";
-                const val = (row as Record<string, unknown>)[key];
-                return typeof val === "object" ? JSON.stringify(val) : String(val ?? "");
-            })
-    );
+    const exportCols = columns.filter((c) => c.id !== "actions");
+    const head = exportCols.map((c) => (typeof c.header === "string" ? c.header : c.id ?? ""));
+    const body = data.map((row) => exportCols.map((c) => getCellValue(row, c)));
     autoTable(doc, { head: [head], body, startY: 22, styles: { fontSize: 9 }, headStyles: { fillColor: [59, 110, 248] } });
     doc.save(`${filename}.pdf`);
 }
 
 async function copyToClipboard<T>(data: T[], columns: ColumnDef<T, unknown>[], onDone: () => void) {
-    const headers = columns
-        .filter((c) => c.id !== "actions")
-        .map((c) => (typeof c.header === "string" ? c.header : c.id ?? ""));
-    const rows = data.map((row) =>
-        columns
-            .filter((c) => c.id !== "actions")
-            .map((c) => {
-                const key = (c as { accessorKey?: string }).accessorKey;
-                if (!key) return "";
-                const val = (row as Record<string, unknown>)[key];
-                return typeof val === "object" ? JSON.stringify(val) : String(val ?? "");
-            })
-    );
+    const exportCols = columns.filter((c) => c.id !== "actions");
+    const headers = exportCols.map((c) => (typeof c.header === "string" ? c.header : c.id ?? ""));
+    const rows = data.map((row) => exportCols.map((c) => getCellValue(row, c)));
     const text = [headers, ...rows].map((r) => r.join("\t")).join("\n");
     await navigator.clipboard.writeText(text);
     onDone();
