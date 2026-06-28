@@ -48,7 +48,7 @@ function TrashIcon() {
 function renderMarkdown(text: string) {
   // Process the text line by line for better markdown handling
   const lines = text.split("\n");
-  const elements: (string | JSX.Element)[] = [];
+  const elements: React.ReactNode[] = [];
   let inList = false;
   let listItems: string[] = [];
   let listType: "ul" | "ol" = "ul";
