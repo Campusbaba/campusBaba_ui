@@ -212,7 +212,7 @@ export function ChatBot() {
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Close chatbot" : "Open chatbot"}
         className={cn(
-          "fixed bottom-6 right-6 z-[9999] size-14 rounded-full flex items-center justify-center",
+          "fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] size-12 sm:size-14 rounded-full flex items-center justify-center",
           "bg-gradient-to-br from-[#3b6ef8] via-[#6366f1] to-[#8b5cf6]",
           "shadow-[0_4px_20px_rgba(59,110,248,0.45)] hover:shadow-[0_6px_28px_rgba(59,110,248,0.6)]",
           "transition-all duration-300 hover:scale-110",
@@ -231,15 +231,25 @@ export function ChatBot() {
         role="dialog"
         aria-label="CampusBaba AI Chatbot"
         className={cn(
-          "fixed bottom-24 right-6 z-[9998] w-[400px] flex flex-col",
-          "bg-background border border-border rounded-2xl",
-          "shadow-[0_20px_60px_rgba(0,0,0,0.15)]",
-          "transition-all duration-300 ease-in-out origin-bottom-right",
+          // Mobile: full width, slides up from bottom like a sheet
+          "fixed z-[9998] flex flex-col bg-background border border-border shadow-[0_-4px_30px_rgba(0,0,0,0.12)]",
+          // Mobile layout
+          "inset-x-0 bottom-0 rounded-t-2xl",
+          "max-h-[92dvh]",
+          // Desktop: floating card bottom-right
+          "sm:inset-x-auto sm:bottom-24 sm:right-6 sm:w-[400px] sm:rounded-2xl sm:max-h-[600px] sm:shadow-[0_20px_60px_rgba(0,0,0,0.15)]",
+          "transition-all duration-300 ease-in-out",
+          // Mobile: slide up / down
           isOpen
-            ? "opacity-100 scale-100 pointer-events-auto"
-            : "opacity-0 scale-95 pointer-events-none"
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 translate-y-4 sm:scale-95 sm:translate-y-0 pointer-events-none"
         )}
       >
+        {/* ── Mobile drag handle (hidden on desktop) ────────────────────────── */}
+        <div className="flex justify-center pt-2.5 pb-0 sm:hidden shrink-0">
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        </div>
+
         {/* ── Header ────────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-4 py-3 rounded-t-2xl bg-[#0f172a] text-white shrink-0">
           <div className="flex items-center gap-2.5">
@@ -282,7 +292,7 @@ export function ChatBot() {
         </div>
 
         {/* ── Messages ──────────────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto min-h-0 max-h-[360px] px-3 py-3 flex flex-col gap-3 scroll-smooth">
+        <div className="flex-1 overflow-y-auto min-h-0 px-3 py-3 flex flex-col gap-3 scroll-smooth">
           {messages.length === 0 && !isLoading ? (
             /* Welcome */
             <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
