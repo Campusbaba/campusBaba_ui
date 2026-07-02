@@ -8,6 +8,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  source?: "faq" | "gemini";
 }
 
 interface GeminiHistoryMessage {
@@ -20,35 +21,53 @@ interface SuggestedPrompt {
   icon: string;
 }
 
+export interface StudentContext {
+  id: string;
+  name: string;
+  studentId: string;
+  className: string | null;
+}
+
+export interface ClassContext {
+  id: string;
+  name: string;
+  classRoomId: string;
+  enrollment: number;
+  capacity: number;
+}
+
 const ROLE_PROMPTS: Record<string, SuggestedPrompt[]> = {
   admin: [
-    { text: "এই মাসের মোট আয় কত?", icon: "💰" },
-    { text: "এই মাসের খরচ কত হয়েছে?", icon: "📊" },
-    { text: "মোট ছাত্র সংখ্যা কত?", icon: "👨‍🎓" },
-    { text: "Profit/Loss report দাও", icon: "📈" },
-    { text: "Show recent notices", icon: "📢" },
-    { text: "আগামী সপ্তাহে কোন পরীক্ষা আছে?", icon: "📝" },
+    { text: "Total Students", icon: "👨‍🎓" },
+    { text: "Monthly Income", icon: "💰" },
+    { text: "Monthly Expense", icon: "💸" },
+    { text: "Profit/Loss", icon: "📈" },
+    { text: "Total Salary", icon: "🧾" },
+    { text: "Notices", icon: "📢" },
+    { text: "Upcoming Exams", icon: "📝" },
+    { text: "Attendance", icon: "✅" },
   ],
   teacher: [
-    { text: "আমার আজকের ক্লাস routine দাও", icon: "📅" },
-    { text: "মোট ছাত্র সংখ্যা কত?", icon: "👨‍🎓" },
-    { text: "আগামী পরীক্ষা কবে?", icon: "📝" },
-    { text: "Show recent notices", icon: "📢" },
-    { text: "এই মাসের attendance কেমন?", icon: "✅" },
+    { text: "Total Students", icon: "👨‍🎓" },
+    { text: "Routine", icon: "📅" },
+    { text: "Upcoming Exams", icon: "📝" },
+    { text: "Notices", icon: "📢" },
+    { text: "Attendance", icon: "✅" },
   ],
   parent: [
-    { text: "আমার ছেলের এই মাসের রিপোর্ট দাও", icon: "📋" },
-    { text: "আমার সন্তানের attendance কেমন?", icon: "✅" },
-    { text: "বাকি fees কত?", icon: "💰" },
-    { text: "আগামী পরীক্ষা কবে?", icon: "📝" },
-    { text: "নতুন কোন notice আছে?", icon: "📢" },
+    { text: "Student Report", icon: "📋" },
+    { text: "Attendance", icon: "✅" },
+    { text: "Fees", icon: "💰" },
+    { text: "Upcoming Exams", icon: "📝" },
+    { text: "Notices", icon: "📢" },
   ],
   student: [
-    { text: "আমার আজকের routine দাও", icon: "📅" },
-    { text: "আমার এই মাসের রিজাল্ট দাও", icon: "📋" },
-    { text: "আমার attendance কেমন?", icon: "✅" },
-    { text: "আমার বাকি fees কত?", icon: "💰" },
-    { text: "নতুন কোন notice আছে?", icon: "📢" },
+    { text: "Routine", icon: "📅" },
+    { text: "Student Report", icon: "📋" },
+    { text: "Attendance", icon: "✅" },
+    { text: "Fees", icon: "💰" },
+    { text: "Upcoming Exams", icon: "📝" },
+    { text: "Notices", icon: "📢" },
   ],
 };
 
@@ -59,6 +78,11 @@ export function useChatbot(role: string = "student") {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [geminiUseCount, setGeminiUseCount] = useState(0);
+
+  // Admin context selection
+  const [selectedStudent, setSelectedStudent] = useState<StudentContext | null>(null);
+  const [selectedClass, setSelectedClass] = useState<ClassContext | null>(null);
 
   const suggestedPrompts = ROLE_PROMPTS[role] || ROLE_PROMPTS.student;
 
@@ -78,22 +102,42 @@ export function useChatbot(role: string = "student") {
       setError(null);
 
       try {
-        const res = await api.post("/chatbot/message", {
+        const payload: any = {
           message: content.trim(),
           conversationHistory: geminiHistory,
-        });
+        };
 
-        const { reply, conversationHistory: updatedHistory } = res.data.data;
+        // Inject context for admin/employee roles
+        if (selectedStudent) {
+          payload.studentContext = selectedStudent.name;
+        }
+        if (selectedClass) {
+          payload.classContext = selectedClass.name;
+        }
+
+        const res = await api.post("/chatbot/message", payload);
+
+        const {
+          reply,
+          conversationHistory: updatedHistory,
+          source,
+        } = res.data.data;
 
         const assistantMessage: ChatMessage = {
           id: `assistant-${Date.now()}`,
           role: "assistant",
           content: reply,
           timestamp: new Date(),
+          source: source || "gemini",
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
         setGeminiHistory(updatedHistory);
+
+        // Only increment counter when Gemini was actually called
+        if (source === "gemini") {
+          setGeminiUseCount((prev) => prev + 1);
+        }
       } catch (err: any) {
         const errorMsg =
           err.message || "দুঃখিত, কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।";
@@ -110,13 +154,19 @@ export function useChatbot(role: string = "student") {
         setIsLoading(false);
       }
     },
-    [geminiHistory, isLoading],
+    [geminiHistory, isLoading, selectedStudent, selectedClass],
   );
 
   const clearChat = useCallback(() => {
     setMessages([]);
     setGeminiHistory([]);
     setError(null);
+    setGeminiUseCount(0);
+  }, []);
+
+  const clearContext = useCallback(() => {
+    setSelectedStudent(null);
+    setSelectedClass(null);
   }, []);
 
   return {
@@ -126,5 +176,12 @@ export function useChatbot(role: string = "student") {
     sendMessage,
     clearChat,
     suggestedPrompts,
+    geminiUseCount,
+    // context
+    selectedStudent,
+    selectedClass,
+    setSelectedStudent,
+    setSelectedClass,
+    clearContext,
   };
 }
